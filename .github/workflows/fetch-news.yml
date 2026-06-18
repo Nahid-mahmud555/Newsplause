@@ -1,0 +1,203 @@
+name: NewsPulse - Auto Fetch News
+
+# ============================================
+# TRIGGERS
+# ============================================
+on:
+  # Schedule: Run every 30 minutes
+  schedule:
+    - cron: '*/30 * * * *'
+  
+  # Manual trigger from GitHub Actions tab
+  workflow_dispatch:
+    inputs:
+      debug_mode:
+        description: 'Enable debug logging'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+  
+  # Push to main branch (optional - for testing)
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - '.github/workflows/fetch-news.yml'
+
+# ============================================
+# ENVIRONMENT VARIABLES
+# ============================================
+env:
+  NODE_VERSION: '18'
+  TZ: 'Asia/Dhaka'
+
+# ============================================
+# JOBS
+# ============================================
+jobs:
+  fetch-and-translate:
+    name: Fetch News & Translate to Bengali
+    runs-on: ubuntu-latest
+    
+    # Prevent multiple runs at the same time
+    concurrency:
+      group: newspulse-fetch
+      cancel-in-progress: false
+    
+    # Timeout after 15 minutes
+    timeout-minutes: 15
+    
+    steps:
+      # Step 1: Checkout Repository
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      
+      # Step 2: Setup Node.js
+      - name: 🟢 Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'backend/package-lock.json'
+      
+      # Step 3: Verify Node.js Version
+      - name: ✅ Verify Node.js
+        run: |
+          node --version
+          npm --version
+      
+      # Step 4: Cache npm dependencies
+      - name: 📦 Cache Dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('backend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      
+      # Step 5: Install Dependencies
+      - name: 📥 Install Dependencies
+        working-directory: ./backend
+        run: |
+          npm ci --only=production
+          echo "✅ Dependencies installed successfully"
+      
+      # Step 6: List Installed Packages
+      - name: 📋 List Packages
+        working-directory: ./backend
+        run: |
+          echo "Installed packages:"
+          npm list --depth=0
+      
+      # Step 7: Create .env file
+      - name: 🔐 Create Environment File
+        working-directory: ./backend
+        run: |
+          cat > .env << EOF
+          SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NODE_ENV=production
+          TZ=Asia/Dhaka
+          EOF
+          echo "✅ .env file created"
+      
+      # Step 8: Debug Mode (Optional)
+      - name: 🐛 Debug Information
+        if: ${{ github.event.inputs.debug_mode == 'true' || github.event_name == 'workflow_dispatch' }}
+        working-directory: ./backend
+        run: |
+          echo "=== Environment Info ==="
+          echo "Node version: $(node --version)"
+          echo "NPM version: $(npm --version)"
+          echo "Working directory: $(pwd)"
+          echo "Files in directory:"
+          ls -la
+          echo ""
+          echo "=== Package.json ==="
+          cat package.json
+          echo ""
+          echo "=== .env file (masked) ==="
+          cat .env | sed 's/=.*/=***/g'
+      
+      # Step 9: Run News Fetcher
+      - name: 🚀 Fetch & Translate News
+        id: fetch
+        working-directory: ./backend
+        run: |
+          echo "Starting NewsPulse fetch at $(date)"
+          node fetch-news.js
+          exit_code=$?
+          
+          if [ $exit_code -eq 0 ]; then
+            echo "✅ News fetch completed successfully"
+            echo "status=success" >> $GITHUB_OUTPUT
+          else
+            echo "❌ News fetch failed with exit code: $exit_code"
+            echo "status=failed" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+        continue-on-error: false
+      
+      # Step 10: Upload Log File (if exists)
+      - name: 📤 Upload Fetch Log
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: fetch-log-${{ github.run_id }}
+          path: backend/fetch-log.txt
+          retention-days: 7
+      
+      # Step 11: Summary
+      - name: 📊 Generate Summary
+        if: always()
+        run: |
+          echo "## NewsPulse Fetch Summary 📰" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status:** ${{ steps.fetch.outputs.status || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Time:** $(date '+%Y-%m-%d %H:%M:%S %Z')" >> $GITHUB_STEP_SUMMARY
+          echo "- **Run ID:** ${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f backend/fetch-log.txt ]; then
+            echo "### Last 20 Log Lines 📋" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            tail -20 backend/fetch-log.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      # Step 12: Error Notification (Optional)
+      - name: 🔔 Notify on Failure
+        if: failure()
+        run: |
+          echo "❌ NewsPulse fetch failed!"
+          echo "Check logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+# ============================================
+# MULTIPLE CRON SCHEDULE EXAMPLES
+# ============================================
+# Uncomment these for different schedules:
+#
+# Every 15 minutes:
+#   - cron: '*/15 * * * *'
+#
+# Every hour:
+#   - cron: '0 * * * *'
+#
+# Every 2 hours:
+#   - cron: '0 */2 * * *'
+#
+# Specific times (Bangladesh time 8 AM, 2 PM, 8 PM):
+#   - cron: '0 2,8,14 * * *'  # UTC = BDT - 6 hours
+#
+# Every day at midnight:
+#   - cron: '0 0 * * *'
+#
+# Every weekday at 9 AM:
+#   - cron: '0 9 * * 1-5'
