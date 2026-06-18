@@ -2,45 +2,25 @@ name: Manual News Fetch
 
 on:
   workflow_dispatch:
-    inputs:
-      category:
-        description: 'Fetch specific category'
-        required: false
-        default: 'all'
-        type: choice
-        options:
-          - 'all'
-          - 'technology'
-          - 'national'
-          - 'sports'
-          - 'jobs'
 
 jobs:
-  manual-fetch:
-    name: Manual Fetch - ${{ github.event.inputs.category }}
+  fetch-news-job:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    
+
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-      
-      - name: Install Dependencies
-        working-directory: ./backend
-        run: npm ci --only=production
-      
-      - name: Create .env
-        working-directory: ./backend
-        run: |
-          echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" > .env
-          echo "SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" >> .env
-      
-      - name: Fetch News
-        working-directory: ./backend
-        run: |
-          echo "Manual fetch for category: ${{ github.event.inputs.category }}"
-          node fetch-news.js
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Run Fetch Script
+      env:
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      run: node fetch-news.js
