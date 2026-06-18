@@ -5,21 +5,25 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+// সুপাবেস ইউআরএল এর শেষের স্ল্যাশ (/) থাকলে তা স্বয়ংক্রিয়ভাবে মুছে ফেলার লজিক
+let supabaseUrl = process.env.SUPABASE_URL ? process.env.SUPABASE_URL.trim() : '';
+if (supabaseUrl.endsWith('/')) {
+  supabaseUrl = supabaseUrl.slice(0, -1);
+}
+
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY ? process.env.SUPABASE_SERVICE_ROLE_KEY.trim() : '';
 
 if (!supabaseUrl || !supabaseServiceRoleKey) {
   console.error('[ERROR] Missing Supabase environment variables!');
   process.exit(1);
 }
 
+// ফ্রেশ ইউআরএল দিয়ে ক্লায়েন্ট তৈরি
 const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
   auth: { persistSession: false }
 });
 
 const parser = new Parser();
-
-// 🎯 তোর সুপাবেস টেবিলের নাম এখানে সেট করে দিলাম
 const TABLE_NAME = 'news_feed'; 
 
 const RSS_SOURCES = [
@@ -48,18 +52,29 @@ async function fetchAndProcessNews() {
     console.log(`\n📡 Processing: ${source.name}`);
     try {
       const feed = await parser.parseURL(source.url);
-      const items = feed.items.slice(0, 5); // প্রতি সোর্স থেকে ৫টা করে নিউজ নেবে
+      const items = feed.items.slice(0, 5);
       
       console.log(`📦 Found ${feed.items.length} items. Processing top ${items.length}...`);
 
       for (let item of items) {
-        let rawTitle = item.title ? (typeof item.title === 'object' ? item.title._ || item.title.text : String(item.title)) : 'No Title';
+        // ডেইলি স্টারের টাইটেল অবজেক্ট অবজেক্ট এরর দূর করার জন্য ফিক্স
+        let rawTitle = '';
+        if (item.title) {
+          if (typeof item.title === 'object') {
+            rawTitle = item.title._ || item.title.text || JSON.stringify(item.title);
+          } else {
+            rawTitle = String(item.title);
+          }
+        } else {
+          rawTitle = 'No Title';
+        }
+        
         let cleanTitle = rawTitle.substring(0, 200);
-        let newsUrl = item.link || item.guid;
+        let newsUrl = item.link || item.guid || '';
 
         console.log(`\n📝 Processing item: "${cleanTitle.substring(0, 50)}..."`);
 
-        // ১. তোর কলাম 'sourceUrl' অনুযায়ী ডুপ্লিকেট চেক করছি
+        // ১. ডুপ্লিকেট ইউআরএল চেক
         const { data: existing, error: checkError } = await supabase
           .from(TABLE_NAME)
           .select('sourceUrl')
@@ -68,6 +83,7 @@ async function fetchAndProcessNews() {
 
         if (checkError) {
           console.error(`[ERROR] Error checking URL existence: ${checkError.message}`);
+          console.error(`Details: ${JSON.stringify(checkError)}`);
           continue; 
         }
 
@@ -76,7 +92,7 @@ async function fetchAndProcessNews() {
           continue;
         }
 
-        // ২. অনুবাদ প্রক্রিয়া
+        // ২. অনুবাদ
         console.log(`🔄 Translating title to Bengali...`);
         const translatedTitle = await translateText(cleanTitle, 'bn');
 
@@ -85,11 +101,9 @@ async function fetchAndProcessNews() {
         
         console.log(`🔄 Translating summary to Bengali...`);
         const translatedSummary = await translateText(cleanSummary, 'bn');
-
-        // 🚨 যেহেতু তোর কলামে text[] (Array) নেওয়া আছে, তাই একটা অ্যারের ভেতরে সামারিটা ঢোকাচ্ছি
         const summaryArray = [translatedSummary];
 
-        // ৩. তোর ডাটাবেসের কলামের নাম অনুযায়ী ইনসার্ট করছি মামা
+        // ৩. ডেটাবেস ইনসার্ট
         const { error: insertError } = await supabase
           .from(TABLE_NAME)
           .insert([{
