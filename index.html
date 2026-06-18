@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NewsPulse — বাংলা সংবাদ</title>
+  <meta name="description" content="বিশ্বের সেরা সংবাদ উৎস থেকে বাংলায় সংক্ষিপ্ত সংবাদ" />
+
+  <!-- Google Fonts: Hind Siliguri (Bengali) + Inter (UI) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- Supabase JS (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
+  <style>
+    /* ═══════════════════════════════════════════════
+       DESIGN TOKENS
+    ═══════════════════════════════════════════════ */
+    :root {
+      --bg-base:      #020817;
+      --bg-surface:   #0f172a;
+      --bg-card:      #0f1b2d;
+      --bg-card-hover:#131f30;
+      --border:       #1e2d3d;
+      --border-hover: #334155;
+
+      --text-primary:   #e2e8f0;
+      --text-secondary: #94a3b8;
+      --text-muted:     #475569;
+      --text-faint:     #334155;
+
+      --accent:        #6366f1;
+      --accent-dim:    rgba(99, 102, 241, 0.15);
+      --accent-glow:   rgba(99, 102, 241, 0.30);
+
+      --cat-tech-bg:  rgba(139,92,246,0.12); --cat-tech-text: #c4b5fd;  --cat-tech-ring: rgba(139,92,246,0.25);
+      --cat-nat-bg:   rgba(16,185,129,0.12); --cat-nat-text:  #6ee7b7;  --cat-nat-ring:  rgba(16,185,129,0.25);
+      --cat-sports-bg:rgba(245,158,11,0.12); --cat-sports-text:#fcd34d; --cat-sports-ring:rgba(245,158,11,0.25);
+      --cat-jobs-bg:  rgba(14,165,233,0.12); --cat-jobs-text: #7dd3fc;  --cat-jobs-ring: rgba(14,165,233,0.25);
+      --cat-crime-bg: rgba(239,68,68,0.12);  --cat-crime-text:#fca5a5;  --cat-crime-ring: rgba(239,68,68,0.25);
+
+      --radius-card: 16px;
+      --radius-pill: 999px;
+    }
+
+    /* ═══════════════════════════════════════════════
+       RESET & BASE
+    ═══════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: "Hind Siliguri", sans-serif;
+      background: var(--bg-base);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar       { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--bg-base); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+    /* ═══════════════════════════════════════════════
+       HEADER
+    ═══════════════════════════════════════════════ */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(2, 8, 23, 0.88);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header-inner {
+      max-width: 1152px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .brand-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      color: var(--accent);
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .brand-name {
+      font-family: "Inter", sans-serif;
+      font-weight: 600;
+      font-size: 18px;
+      color: var(--text-primary);
+      letter-spacing: -0.02em;
+    }
+
+    .brand-sub {
+      font-family: "Inter", sans-serif;
+      font-size: 13px;
+      color: var(--text-faint);
+    }
+
+    .live-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: "Inter", sans-serif;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10b981;
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+
+    /* Category nav */
+    .category-nav {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      overflow-x: auto;
+      padding-bottom: 12px;
+      scrollbar-width: none;
+    }
+    .category-nav::-webkit-scrollbar { display: none; }
+
+    .tab-btn {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 16px;
+      border-radius: var(--radius-pill);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      transition: all 0.2s ease;
+      font-family: "Hind Siliguri", sans-serif;
+      white-space: nowrap;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-primary);
+      background: rgba(255,255,255,0.06);
+    }
+
+    .tab-btn.active {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #ffffff;
+      box-shadow: 0 0 24px var(--accent-glow);
+    }
+
+    .tab-icon { font-size: 11px; opacity: 0.65; }
+
+    /* ═══════════════════════════════════════════════
+       MAIN CONTENT
+    ═══════════════════════════════════════════════ */
+    .main {
+      max-width: 1152px;
+      margin: 0 auto;
+      padding: 32px 24px 64px;
+    }
+
+    .result-count {
+      font-family: "Inter", sans-serif;
+      font-size: 11px;
+      color: var(--text-faint);
+      margin-bottom: 20px;
+    }
+
+    /* ═══════════════════════════════════════════════
+       GRID
+    ═══════════════════════════════════════════════ */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    @media (min-width: 640px)  { .grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 1024px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+
+    /* ═══════════════════════════════════════════════
+       CARDS
+    ═══════════════════════════════════════════════ */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      transition: border-color 0.25s, background 0.25s, box-shadow 0.25s;
+      animation: fadeInUp 0.35s ease both;
+    }
+
+    .card:hover {
+      border-color: var(--border-hover);
+      background: var(--bg-card-hover);
+      box-shadow: 0 0 0 1px var(--accent-glow),
+                  0 12px 40px rgba(0,0,0,0.5);
+    }
+
+    /* Card top row */
+    .card-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .cat-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: var(--radius-pill);
+      font-size: 11px;
+      font-weight: 500;
+      border: 1px solid transparent;
+    }
+
+    .cat-technology { background: var(--cat-tech-bg);   color: var(--cat-tech-text);   border-color: var(--cat-tech-ring);   }
+    .cat-national   { background: var(--cat-nat-bg);    color: var(--cat-nat-text);    border-color: var(--cat-nat-ring);    }
+    .cat-sports     { background: var(--cat-sports-bg); color: var(--cat-sports-text); border-color: var(--cat-sports-ring); }
+    .cat-jobs       { background: var(--cat-jobs-bg);   color: var(--cat-jobs-text);   border-color: var(--cat-jobs-ring);   }
+    .cat-crime      { background: var(--cat-crime-bg);  color: var(--cat-crime-text);  border-color: var(--cat-crime-ring);  }
+
+    .time-ago {
+      font-family: "Inter", sans-serif;
+      font-size: 11px;
+      color: var(--text-faint);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Card title */
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* Bullet summary */
+    .bullet-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .bullet-item {
+      display: flex;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .bullet-arrow {
+      color: var(--accent);
+      font-size: 11px;
+      margin-top: 3px;
+      flex-shrink: 0;
+      opacity: 0.85;
+    }
+
+    /* Card footer */
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+      margin-top: auto;
+    }
+
+    .source-label {
+      font-family: "Inter", sans-serif;
+      font-size: 11px;
+      color: var(--text-faint);
+    }
+
+    .source-name {
+      color: var(--text-muted);
+    }
+
+    .deadline-label {
+      font-family: "Inter", sans-serif;
+      font-size: 11px;
+      color: var(--cat-jobs-text);
+      font-weight: 500;
+    }
+
+    .read-link {
+      font-family: "Inter", sans-serif;
+      font-size: 11px;
+      color: var(--accent);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .read-link:hover { color: #a5b4fc; }
+
+    /* ═══════════════════════════════════════════════
+       SKELETON LOADER
+    ═══════════════════════════════════════════════ */
+    .skeleton-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .skeleton {
+      background: linear-gradient(90deg, #1e293b 25%, #243447 50%, #1e293b 75%);
+      background-size: 800px 100%;
+      animation: shimmer 1.8s linear infinite;
+      border-radius: 6px;
+    }
+
+    .sk-row { display: flex; justify-content: space-between; align-items: center; }
+    .sk-s   { height: 14px; width: 64px; }
+    .sk-xs  { height: 12px; width: 52px; }
+    .sk-l   { height: 15px; width: 100%; }
+    .sk-m   { height: 13px; }
+    .sk-bullets { display: flex; flex-direction: column; gap: 8px; }
+    .sk-b1  { height: 12px; width: 100%; }
+    .sk-b2  { height: 12px; width: 90%; }
+    .sk-b3  { height: 12px; width: 82%; }
+
+    /* ═══════════════════════════════════════════════
+       EMPTY STATE
+    ═══════════════════════════════════════════════ */
+    .empty-state {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 24px;
+      text-align: center;
+    }
+
+    .empty-icon  { font-size: 48px; opacity: 0.12; margin-bottom: 16px; }
+    .empty-title { font-size: 17px; color: var(--text-muted); margin-bottom: 6px; }
+    .empty-sub   { font-size: 13px; color: var(--text-faint); }
+
+    /* ═══════════════════════════════════════════════
+       FOOTER
+    ═══════════════════════════════════════════════ */
+    .footer {
+      border-top: 1px solid rgba(30,45,61,0.5);
+      padding: 28px 24px;
+      text-align: center;
+    }
+
+    .footer p {
+      font-family: "Inter", sans-serif;
+      font-size: 11px;
+      color: var(--text-faint);
+    }
+
+    /* ═══════════════════════════════════════════════
+       ANIMATIONS
+    ═══════════════════════════════════════════════ */
+    @keyframes shimmer {
+      0%   { background-position: -800px 0; }
+      100% { background-position:  800px 0; }
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.45; transform: scale(0.75); }
+    }
+
+    /* Responsive hide for brand sub */
+    @media (max-width: 480px) { .brand-sub { display: none; } }
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════════
+       HEADER
+  ══════════════════════════════════════════ -->
+  <header class="header">
+    <div class="header-inner">
+
+      <!-- Brand row -->
+      <div class="brand-row">
+        <div class="brand">
+          <span class="brand-icon">◈</span>
+          <span class="brand-name">NewsPulse</span>
+          <span class="brand-sub">— বাংলা সংবাদ</span>
+        </div>
+        <div class="live-badge">
+          <span class="live-dot"></span>
+          সরাসরি
+        </div>
+      </div>
+
+      <!-- Category tabs -->
+      <nav class="category-nav" aria-label="সংবাদ বিভাগ" id="categoryNav">
+        <button class="tab-btn active" data-category="all">
+          <span class="tab-icon">◈</span> সব
+        </button>
+        <button class="tab-btn" data-category="technology">
+          <span class="tab-icon">⬡</span> প্রযুক্তি
+        </button>
+        <button class="tab-btn" data-category="national">
+          <span class="tab-icon">◉</span> জাতীয়
+        </button>
+        <button class="tab-btn" data-category="sports">
+          <span class="tab-icon">◎</span> খেলাধুলা
+        </button>
+        <button class="tab-btn" data-category="jobs">
+          <span class="tab-icon">◇</span> চাকরি
+        </button>
+        <button class="tab-btn" data-category="crime">
+          <span class="tab-icon">○</span> বিশ্ব
+        </button>
+      </nav>
+
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════════
+       MAIN
+  ══════════════════════════════════════════ -->
+  <main class="main">
+    <p class="result-count" id="resultCount"></p>
+    <div class="grid" id="newsGrid">
+      <!-- Skeleton placeholders -->
+      <div class="skeleton-card">
+        <div class="sk-row"><div class="skeleton sk-s"></div><div class="skeleton sk-xs"></div></div>
+        <div class="skeleton sk-l" style="height:16px"></div>
+        <div class="skeleton" style="height:14px;width:75%"></div>
+        <div class="sk-bullets">
+          <div class="skeleton sk-b1"></div>
+          <div class="skeleton sk-b2"></div>
+          <div class="skeleton sk-b3"></div>
+        </div>
+        <div class="skeleton" style="height:11px;width:40%"></div>
+      </div>
+      <div class="skeleton-card">
+        <div class="sk-row"><div class="skeleton sk-s"></div><div class="skeleton sk-xs"></div></div>
+        <div class="skeleton sk-l" style="height:16px"></div>
+        <div class="skeleton" style="height:14px;width:80%"></div>
+        <div class="sk-bullets">
+          <div class="skeleton sk-b1"></div>
+          <div class="skeleton sk-b2"></div>
+          <div class="skeleton sk-b3"></div>
+        </div>
+        <div class="skeleton" style="height:11px;width:35%"></div>
+      </div>
+      <div class="skeleton-card">
+        <div class="sk-row"><div class="skeleton sk-s"></div><div class="skeleton sk-xs"></div></div>
+        <div class="skeleton sk-l" style="height:16px"></div>
+        <div class="skeleton" style="height:14px;width:70%"></div>
+        <div class="sk-bullets">
+          <div class="skeleton sk-b1"></div>
+          <div class="skeleton sk-b2"></div>
+          <div class="skeleton sk-b3"></div>
+        </div>
+        <div class="skeleton" style="height:11px;width:45%"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ══════════════════════════════════════════
+       FOOTER
+  ══════════════════════════════════════════ -->
+  <footer class="footer">
+    <p>NewsPulse &middot; স্বয়ংক্রিয় সংবাদ সংগ্রহ &middot; প্রতি ৬ ঘণ্টায় আপডেট</p>
+  </footer>
+
+
+  <script>
+    // ──────────────────────────────────────────────────────────
+    // CONFIG — replace with your actual Supabase credentials
+    // ──────────────────────────────────────────────────────────
+    const SUPABASE_URL      = "https://bysrzzwcipgeeuntfkit.supabase.co/rest/v1/";
+    const SUPABASE_ANON_KEY = "sb_publishable_UrM7qtGcB_vkHuoF5BlnJg_4R8WfPY2";
+
+    // ──────────────────────────────────────────────────────────
+    // INIT SUPABASE
+    // ──────────────────────────────────────────────────────────
+    const { createClient } = supabase;
+    const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // ──────────────────────────────────────────────────────────
+    // STATE
+    // ──────────────────────────────────────────────────────────
+    let activeCategory = "all";
+
+    // ──────────────────────────────────────────────────────────
+    // HELPERS
+    // ──────────────────────────────────────────────────────────
+    function timeAgo(dateStr) {
+      const diff  = Date.now() - new Date(dateStr).getTime();
+      const mins  = Math.floor(diff / 60000);
+      const hours = Math.floor(mins / 60);
+      const days  = Math.floor(hours / 24);
+      if (days  > 0) return `${days} দিন আগে`;
+      if (hours > 0) return `${hours} ঘণ্টা আগে`;
+      if (mins  > 0) return `${mins} মিনিট আগে`;
+      return "এইমাত্র";
+    }
+
+    function catClass(cat) {
+      const map = {
+        technology: "cat-technology",
+        national:   "cat-national",
+        sports:     "cat-sports",
+        jobs:       "cat-jobs",
+        crime:      "cat-crime",
+      };
+      return map[cat] || "cat-national";
+    }
+
+    function catLabel(cat) {
+      const map = {
+        technology: "প্রযুক্তি",
+        national:   "জাতীয়",
+        sports:     "খেলাধুলা",
+        jobs:       "চাকরি",
+        crime:      "বিশ্ব",
+      };
+      return map[cat] || cat;
+    }
+
+    function formatDeadline(dateStr) {
+      if (!dateStr) return "";
+      return new Date(dateStr).toLocaleDateString("bn-BD", {
+        day: "numeric", month: "short", year: "numeric"
+      });
+    }
+
+    function escapeHtml(str = "") {
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    // ──────────────────────────────────────────────────────────
+    // RENDER
+    // ──────────────────────────────────────────────────────────
+    function renderSkeletons(count = 6) {
+      return Array.from({ length: count }).map(() => `
+        <div class="skeleton-card">
+          <div class="sk-row">
+            <div class="skeleton sk-s"></div>
+            <div class="skeleton sk-xs"></div>
+          </div>
+          <div class="skeleton sk-l" style="height:16px"></div>
+          <div class="skeleton" style="height:14px;width:75%"></div>
+          <div class="sk-bullets">
+            <div class="skeleton sk-b1"></div>
+            <div class="skeleton sk-b2"></div>
+            <div class="skeleton sk-b3"></div>
+          </div>
+          <div class="skeleton" style="height:11px;width:40%"></div>
+        </div>
+      `).join("");
+    }
+
+    function renderCard(article, index) {
+      const bullets = (article.summary || []).map((b, i) => `
+        <li class="bullet-item">
+          <span class="bullet-arrow">▸</span>
+          <span>${escapeHtml(b)}</span>
+        </li>
+      `).join("");
+
+      const deadlineHtml = (article.category === "jobs" && article.deadline)
+        ? `<span class="deadline-label">শেষ: ${formatDeadline(article.deadline)}</span>`
+        : `<span class="source-label">সূত্র: <span class="source-name">${escapeHtml(article.source_name || "অজানা")}</span></span>`;
+
+      return `
+        <article class="card" style="animation-delay:${index * 55}ms" role="article">
+          <div class="card-meta">
+            <span class="cat-badge ${catClass(article.category)}">${catLabel(article.category)}</span>
+            <time class="time-ago">${timeAgo(article.created_at)}</time>
+          </div>
+
+          <h2 class="card-title">${escapeHtml(article.title)}</h2>
+
+          <ul class="bullet-list">${bullets}</ul>
+
+          <div class="card-footer">
+            ${deadlineHtml}
+            <a href="${escapeHtml(article.source_url)}" target="_blank" rel="noopener noreferrer"
+               class="read-link" aria-label="মূল সংবাদ পড়ুন">পড়ুন →</a>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderEmpty(category) {
+      const msg = category === "all"
+        ? "পাইপলাইন শীঘ্রই সংবাদ আনবে"
+        : "এই বিভাগে এখন কোনো সংবাদ নেই";
+      return `
+        <div class="empty-state">
+          <div class="empty-icon">◈</div>
+          <p class="empty-title">কোনো সংবাদ নেই</p>
+          <p class="empty-sub">${msg}</p>
+        </div>
+      `;
+    }
+
+    // ──────────────────────────────────────────────────────────
+    // FETCH FROM SUPABASE
+    // ──────────────────────────────────────────────────────────
+    async function fetchArticles(category) {
+      const grid  = document.getElementById("newsGrid");
+      const count = document.getElementById("resultCount");
+
+      // Show skeletons while loading
+      grid.innerHTML = renderSkeletons(6);
+      count.textContent = "";
+
+      let query = db
+        .from("news_feed")
+        .select("*", { count: "exact" })
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      if (category !== "all") {
+        query = query.eq("category", category);
+      }
+
+      const { data, error, count: total } = await query;
+
+      if (error) {
+        console.error("Supabase error:", error.message);
+        grid.innerHTML = renderEmpty(category);
+        return;
+      }
+
+      count.textContent = `${total || 0} টি সংবাদ পাওয়া গেছে`;
+
+      if (!data || data.length === 0) {
+        grid.innerHTML = renderEmpty(category);
+        return;
+      }
+
+      grid.innerHTML = data.map((article, i) => renderCard(article, i)).join("");
+    }
+
+    // ──────────────────────────────────────────────────────────
+    // REALTIME SUBSCRIPTION
+    // ──────────────────────────────────────────────────────────
+    function setupRealtime() {
+      db.channel("newspulse_live")
+        .on("postgres_changes", {
+          event: "INSERT",
+          schema: "public",
+          table: "news_feed",
+        }, () => {
+          fetchArticles(activeCategory);
+        })
+        .subscribe();
+    }
+
+    // ──────────────────────────────────────────────────────────
+    // CATEGORY TABS
+    // ──────────────────────────────────────────────────────────
+    document.getElementById("categoryNav").addEventListener("click", (e) => {
+      const btn = e.target.closest(".tab-btn");
+      if (!btn) return;
+
+      const category = btn.dataset.category;
+      if (category === activeCategory) return;
+
+      // Update active state
+      document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      activeCategory = category;
+      fetchArticles(activeCategory);
+    });
+
+    // ──────────────────────────────────────────────────────────
+    // BOOT
+    // ──────────────────────────────────────────────────────────
+    fetchArticles("all");
+    setupRealtime();
+  </script>
+</body>
+</html>
