@@ -602,37 +602,39 @@
       `).join("");
     }
 
-    function renderCard(article, index) {
-      const bullets = (article.summary || []).map((b, i) => `
-        <li class="bullet-item">
-          <span class="bullet-arrow">▸</span>
-          <span>${escapeHtml(b)}</span>
-        </li>
-      `).join("");
+   function renderCard(article, index) {
+  // ১. সামারি দেখানোর লজিক আপডেট: article.summary এর বদলে article.bengaliSummaries ব্যবহার কর
+  const bullets = (article.bengaliSummaries || []).map((b, i) => `
+    <li class="bullet-item">
+      <span class="bullet-arrow">▸</span>
+      <span>${escapeHtml(b)}</span>
+    </li>
+  `).join("");
 
-      const deadlineHtml = (article.category === "jobs" && article.deadline)
-        ? `<span class="deadline-label">শেষ: ${formatDeadline(article.deadline)}</span>`
-        : `<span class="source-label">সূত্র: <span class="source-name">${escapeHtml(article.source_name || "অজানা")}</span></span>`;
+  const deadlineHtml = (article.category === "jobs" && article.deadline)
+    ? `<span class="deadline-label">শেষ: ${formatDeadline(article.deadline)}</span>`
+    : `<span class="source-label">সূত্র: <span class="source-name">${escapeHtml(article.source_name || "অজানা")}</span></span>`;
 
-      return `
-        <article class="card" style="animation-delay:${index * 55}ms" role="article">
-          <div class="card-meta">
-            <span class="cat-badge ${catClass(article.category)}">${catLabel(article.category)}</span>
-            <time class="time-ago">${timeAgo(article.created_at)}</time>
-          </div>
+  return `
+    <article class="card" style="animation-delay:${index * 55}ms" role="article">
+      <div class="card-meta">
+        <span class="cat-badge ${catClass(article.category)}">${catLabel(article.category)}</span>
+        <time class="time-ago">${timeAgo(article.created_at)}</time>
+      </div>
 
-          <h2 class="card-title">${escapeHtml(article.title)}</h2>
+      <!-- ২. টাইটেল দেখানোর লজিক আপডেট: article.title এর বদলে article.bengaliTitle ব্যবহার কর -->
+      <h2 class="card-title">${escapeHtml(article.bengaliTitle)}</h2>
 
-          <ul class="bullet-list">${bullets}</ul>
+      <ul class="bullet-list">${bullets}</ul>
 
-          <div class="card-footer">
-            ${deadlineHtml}
-            <a href="${escapeHtml(article.source_url)}" target="_blank" rel="noopener noreferrer"
-               class="read-link" aria-label="মূল সংবাদ পড়ুন">পড়ুন →</a>
-          </div>
-        </article>
-      `;
-    }
+      <div class="card-footer">
+        ${deadlineHtml}
+        <a href="${escapeHtml(article.sourceUrl)}" target="_blank" rel="noopener noreferrer"
+           class="read-link" aria-label="মূল সংবাদ পড়ুন">পড়ুন →</a>
+      </div>
+    </article>
+  `;
+}
 
     function renderEmpty(category) {
       const msg = category === "all"
