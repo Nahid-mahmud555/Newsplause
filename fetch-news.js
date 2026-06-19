@@ -21,66 +21,48 @@
     // ──────────────────────────────────────────────────────────
     let activeCategory = "all";
     let realtimeChannel = null;
-    let userProfile = null; // { age, categories: [] }
+    let userProfile = null;
 
     // ──────────────────────────────────────────────────────────
-    // CATEGORY NAVIGATION VISIBILITY
+    // CATEGORY NAVIGATION VISIBILITY - FORCE HIDE/SHOW
     // ──────────────────────────────────────────────────────────
     
-    /**
-     * ইউজারের প্রোফাইল অনুযায়ী নেভিগেশন বাটন ফিল্টার করে
-     * সব (All) বাটন সবসময় দেখাবে + ইউজারের সিলেক্ট করা ক্যাটাগরিগুলো
-     */
     function filterCategoryNav() {
-      const categoryNav = document.getElementById("categoryNav");
-      const allButtons = categoryNav.querySelectorAll(".tab-btn");
+      const allButtons = document.querySelectorAll("#categoryNav .tab-btn");
       
-      console.log("[FilterNav] Current profile:", userProfile);
+      console.log("=== NAV FILTER START ===");
+      console.log("User profile:", userProfile);
       
+      // যদি প্রোফাইল না থাকে, সব বাটন দেখাও
       if (!userProfile || !userProfile.categories || userProfile.categories.length === 0) {
-        // যদি প্রোফাইল না থাকে, সব বাটন দেখাও
-        console.log("[FilterNav] No profile - showing all buttons");
         allButtons.forEach(btn => {
-          btn.style.removeProperty('display');
+          btn.style.setProperty('display', 'inline-flex', 'important');
         });
+        console.log("No profile - showing all");
         return;
       }
 
-      // Allowed categories: "all" + user's selected categories
-      const allowedCategories = ["all", ...userProfile.categories];
-      console.log("[FilterNav] Allowed categories:", allowedCategories);
-      
-      let visibleCount = 0;
-      let hiddenCount = 0;
+      // Allowed: "all" + user's categories
+      const allowed = ["all", ...userProfile.categories];
+      console.log("Allowed:", allowed);
       
       allButtons.forEach(btn => {
-        const btnCategory = btn.dataset.category;
-        if (allowedCategories.includes(btnCategory)) {
-          btn.style.display = ""; // দেখাও - কিন্তু flex বা inline-flex ওভাররাইট না করে
-          btn.style.removeProperty('display'); // ডিফল্ট CSS ব্যবহার করুক
-          visibleCount++;
-          console.log(`[FilterNav] ✅ Showing: ${btnCategory}`);
+        const cat = btn.dataset.category;
+        if (allowed.includes(cat)) {
+          btn.style.setProperty('display', 'inline-flex', 'important');
+          console.log("SHOW:", cat);
         } else {
-          btn.style.display = "none"; // হাইড করো
-          hiddenCount++;
-          console.log(`[FilterNav] ❌ Hiding: ${btnCategory}`);
+          btn.style.setProperty('display', 'none', 'important');
+          console.log("HIDE:", cat);
         }
       });
       
-      console.log(`[FilterNav] Summary: ${visibleCount} visible, ${hiddenCount} hidden`);
+      console.log("=== NAV FILTER END ===");
     }
 
     // ──────────────────────────────────────────────────────────
     // ONBOARDING LOGIC
     // ──────────────────────────────────────────────────────────
-    function hasUserProfile() {
-      try {
-        return localStorage.getItem(STORAGE_KEY_PROFILE) !== null;
-      } catch {
-        return false;
-      }
-    }
-
     function loadUserProfile() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY_PROFILE);
@@ -98,41 +80,52 @@
     function saveUserProfile(profile) {
       try {
         localStorage.setItem(STORAGE_KEY_PROFILE, JSON.stringify(profile));
-        console.log("[Onboarding] Profile saved:", profile);
       } catch (error) {
         console.warn("[Onboarding] Could not save profile:", error.message);
       }
     }
 
     function showOnboarding() {
-      document.getElementById("onboardingOverlay").classList.remove("hidden");
+      const overlay = document.getElementById("onboardingOverlay");
+      overlay.classList.remove("hidden");
+      overlay.style.display = "flex";
       goToStep(1);
     }
 
     function hideOnboarding() {
       const overlay = document.getElementById("onboardingOverlay");
+      overlay.style.display = "none";
       overlay.classList.add("hidden");
-      updateProfileBadge();
       
-      // একটু ডিলে দিয়ে ফিল্টার কল করো - DOM আপডেটের জন্য
+      // Profile badge update
+      if (userProfile) {
+        const badge = document.getElementById("profileBadge");
+        const avatar = document.getElementById("profileAvatar");
+        const info = document.getElementById("profileInfo");
+        
+        badge.classList.remove("hidden");
+        avatar.textContent = userProfile.age.toString().charAt(0) || "N";
+        info.textContent = `বয়স ${userProfile.age} · ${userProfile.categories.length} ক্যাটাগরি`;
+        
+        badge.onclick = () => showOnboarding();
+      }
+      
+      // 🔥 ফিল্টার কল - একটু ডিলে দিয়ে
       setTimeout(() => {
         filterCategoryNav();
-      }, 100);
+      }, 50);
     }
 
     function goToStep(stepNumber) {
-      // Update steps
       document.querySelectorAll(".onboarding-step").forEach(s => s.classList.remove("active"));
       document.getElementById(`step${stepNumber}`).classList.add("active");
 
-      // Update step indicators
       document.querySelectorAll(".step-dot").forEach((dot, i) => {
         dot.classList.remove("active", "completed");
         if (i + 1 === stepNumber) dot.classList.add("active");
         if (i + 1 < stepNumber) dot.classList.add("completed");
       });
 
-      // Hide error messages
       document.querySelectorAll(".error-message").forEach(el => el.classList.remove("show"));
     }
 
@@ -145,7 +138,6 @@
       const age = parseInt(ageInput.value);
       if (!age || age < 10 || age > 100) {
         ageError.classList.add("show");
-        ageInput.focus();
         return;
       }
       ageError.classList.remove("show");
@@ -162,53 +154,29 @@
       }
       categoryError.classList.remove("show");
 
-      // Save user profile
+      // Save profile
       userProfile = {
         age: age,
         categories: checkedCategories
       };
       saveUserProfile(userProfile);
+      saveCategoryPreference(checkedCategories[0]);
 
-      console.log("[Onboarding] Profile saved with categories:", checkedCategories);
-
-      // Set active category to the first preferred category
-      const preferredCategory = userProfile.categories[0];
-      activeCategory = preferredCategory;
-
-      // Save category preference
-      saveCategoryPreference(preferredCategory);
-
-      // Update UI
-      updateActiveButton(preferredCategory);
+      // Update state
+      activeCategory = checkedCategories[0];
+      updateActiveButton(activeCategory);
+      
+      // Hide onboarding + filter nav
       hideOnboarding();
 
-      // Fetch filtered news
-      fetchArticles(preferredCategory);
-
-      // Setup realtime
+      // Fetch & realtime
+      fetchArticles(activeCategory);
       setupRealtime();
-
-      console.log("[Onboarding] Complete. Profile:", userProfile);
     }
 
-    function updateProfileBadge() {
-      const badge = document.getElementById("profileBadge");
-      const avatar = document.getElementById("profileAvatar");
-      const info = document.getElementById("profileInfo");
-
-      if (userProfile) {
-        badge.classList.remove("hidden");
-        avatar.textContent = userProfile.age.toString().charAt(0) || "N";
-        info.textContent = `বয়স ${userProfile.age} · ${userProfile.categories.length} ক্যাটাগরি`;
-        
-        // Re-onboard on click
-        badge.onclick = () => {
-          showOnboarding();
-        };
-      }
-    }
-
-    // Category checkbox toggle
+    // ──────────────────────────────────────────────────────────
+    // CATEGORY CHECKBOX TOGGLE
+    // ──────────────────────────────────────────────────────────
     document.getElementById("categoryGrid").addEventListener("click", (e) => {
       const checkbox = e.target.closest(".category-checkbox");
       if (!checkbox) return;
@@ -222,7 +190,6 @@
         checkbox.classList.remove("selected");
       }
 
-      // Hide category error when at least one selected
       const anyChecked = document.querySelectorAll("#categoryGrid input[type='checkbox']:checked").length > 0;
       if (anyChecked) {
         document.getElementById("categoryError").classList.remove("show");
@@ -230,25 +197,19 @@
     });
 
     // ──────────────────────────────────────────────────────────
-    // CATEGORY PREFERENCE SYSTEM
+    // CATEGORY PREFERENCE
     // ──────────────────────────────────────────────────────────
     function saveCategoryPreference(category) {
       try {
         localStorage.setItem(STORAGE_KEY_CATEGORY, category);
-      } catch (error) {
-        console.warn("[Preference] Could not save category:", error.message);
-      }
+      } catch (error) {}
     }
 
     function getCategoryPreference() {
       try {
         const saved = localStorage.getItem(STORAGE_KEY_CATEGORY);
-        if (saved && VALID_CATEGORIES.includes(saved)) {
-          return saved;
-        }
-      } catch (error) {
-        console.warn("[Preference] Could not read category:", error.message);
-      }
+        if (saved && VALID_CATEGORIES.includes(saved)) return saved;
+      } catch (error) {}
       return "all";
     }
 
@@ -264,7 +225,7 @@
     }
 
     function updateActiveButton(category) {
-      document.querySelectorAll(".tab-btn").forEach((btn) => {
+      document.querySelectorAll(".tab-btn").forEach(btn => {
         btn.classList.remove("active");
         if (btn.dataset.category === category) {
           btn.classList.add("active");
@@ -316,11 +277,7 @@
     }
 
     function escapeHtml(str = "") {
-      return str
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;");
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
     }
 
     // ──────────────────────────────────────────────────────────
@@ -329,10 +286,7 @@
     function renderSkeletons(count = 6) {
       return Array.from({ length: count }).map(() => `
         <div class="skeleton-card">
-          <div class="sk-row">
-            <div class="skeleton sk-s"></div>
-            <div class="skeleton sk-xs"></div>
-          </div>
+          <div class="sk-row"><div class="skeleton sk-s"></div><div class="skeleton sk-xs"></div></div>
           <div class="skeleton sk-l" style="height:16px"></div>
           <div class="skeleton" style="height:14px;width:75%"></div>
           <div class="sk-bullets">
@@ -347,10 +301,7 @@
 
     function renderCard(article, index) {
       const bullets = (article.bengaliSummaries || []).map((b) => `
-        <li class="bullet-item">
-          <span class="bullet-arrow">▸</span>
-          <span>${escapeHtml(b)}</span>
-        </li>
+        <li class="bullet-item"><span class="bullet-arrow">▸</span><span>${escapeHtml(b)}</span></li>
       `).join("");
 
       const deadlineHtml = (article.category === "jobs" && article.deadline)
@@ -367,17 +318,14 @@
           <ul class="bullet-list">${bullets}</ul>
           <div class="card-footer">
             ${deadlineHtml}
-            <a href="${escapeHtml(article.sourceUrl)}" target="_blank" rel="noopener noreferrer"
-               class="read-link" aria-label="মূল সংবাদ পড়ুন">পড়ুন →</a>
+            <a href="${escapeHtml(article.sourceUrl)}" target="_blank" rel="noopener noreferrer" class="read-link">পড়ুন →</a>
           </div>
         </article>
       `;
     }
 
     function renderEmpty(category) {
-      const msg = category === "all"
-        ? "পাইপলাইন শীঘ্রই সংবাদ আনবে"
-        : "এই বিভাগে এখন কোনো সংবাদ নেই";
+      const msg = category === "all" ? "পাইপলাইন শীঘ্রই সংবাদ আনবে" : "এই বিভাগে এখন কোনো সংবাদ নেই";
       return `
         <div class="empty-state">
           <div class="empty-icon">◈</div>
@@ -388,7 +336,7 @@
     }
 
     // ──────────────────────────────────────────────────────────
-    // FETCH ARTICLES WITH CATEGORY FILTERING
+    // FETCH
     // ──────────────────────────────────────────────────────────
     async function fetchArticles(category) {
       const grid  = document.getElementById("newsGrid");
@@ -398,107 +346,75 @@
       count.textContent = "";
 
       try {
-        let query = db
-          .from("news_feed")
-          .select("*", { count: "exact" })
-          .order("created_at", { ascending: false })
-          .limit(50);
-
-        if (category !== "all") {
-          query = query.eq("category", category);
-        }
+        let query = db.from("news_feed").select("*", { count: "exact" }).order("created_at", { ascending: false }).limit(50);
+        if (category !== "all") query = query.eq("category", category);
 
         const { data, error, count: total } = await query;
+        if (error) { grid.innerHTML = renderEmpty(category); return; }
 
-        if (error) {
-          console.error("Supabase error:", error.message);
-          grid.innerHTML = renderEmpty(category);
-          count.textContent = "ডেটা লোড করতে সমস্যা হয়েছে";
-          return;
-        }
+        count.textContent = category === "all" ? `${total || 0} টি সংবাদ` : `${total || 0} টি সংবাদ (${catLabel(category)})`;
 
-        if (category === "all") {
-          count.textContent = `${total || 0} টি সংবাদ পাওয়া গেছে (সকল বিভাগ)`;
-        } else {
-          count.textContent = `${total || 0} টি সংবাদ পাওয়া গেছে (${catLabel(category)} বিভাগ)`;
-        }
+        if (!data || data.length === 0) { grid.innerHTML = renderEmpty(category); return; }
 
-        if (!data || data.length === 0) {
-          grid.innerHTML = renderEmpty(category);
-          return;
-        }
-
-        let filteredData = data;
-        if (category !== "all") {
-          filteredData = data.filter(article => article.category === category);
-        }
-
+        let filteredData = category !== "all" ? data.filter(a => a.category === category) : data;
         grid.innerHTML = filteredData.map((article, i) => renderCard(article, i)).join("");
       } catch (err) {
-        console.error("[Fetch] Unexpected error:", err);
         grid.innerHTML = renderEmpty(category);
-        count.textContent = "ডেটা লোড করতে সমস্যা হয়েছে";
       }
     }
 
     // ──────────────────────────────────────────────────────────
-    // REALTIME SUBSCRIPTION
+    // REALTIME
     // ──────────────────────────────────────────────────────────
     function setupRealtime() {
-      if (realtimeChannel) {
-        db.removeChannel(realtimeChannel);
-      }
-
+      if (realtimeChannel) db.removeChannel(realtimeChannel);
       realtimeChannel = db.channel("newspulse_live")
-        .on("postgres_changes", {
-          event: "INSERT",
-          schema: "public",
-          table: "news_feed",
-        }, (payload) => {
-          if (activeCategory === "all" || payload.new.category === activeCategory) {
-            fetchArticles(activeCategory);
-          }
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "news_feed" }, (payload) => {
+          if (activeCategory === "all" || payload.new.category === activeCategory) fetchArticles(activeCategory);
         })
         .subscribe();
     }
 
     // ──────────────────────────────────────────────────────────
-    // INITIALIZATION
+    // INIT
     // ──────────────────────────────────────────────────────────
     function initializeApp() {
-      // Load user profile
       userProfile = loadUserProfile();
-      
-      console.log("[Init] Loaded profile:", userProfile);
 
       if (!userProfile) {
-        // First-time user: show onboarding
-        console.log("[Init] No profile - showing onboarding");
+        // No profile → show onboarding
         showOnboarding();
         updateActiveButton("all");
       } else {
-        // Returning user: load preferences
-        console.log("[Init] Returning user - filtering navigation");
-        
-        // আগে নেভিগেশন ফিল্টার করো
+        // Has profile → filter nav & load
         filterCategoryNav();
         
         const savedCategory = getCategoryPreference();
-        console.log("[Init] Saved category:", savedCategory);
-        
         activeCategory = savedCategory;
         updateActiveButton(savedCategory);
+        
+        // Hide onboarding overlay
+        document.getElementById("onboardingOverlay").style.display = "none";
+        document.getElementById("onboardingOverlay").classList.add("hidden");
+        
+        // Show profile badge
+        if (userProfile) {
+          const badge = document.getElementById("profileBadge");
+          const avatar = document.getElementById("profileAvatar");
+          const info = document.getElementById("profileInfo");
+          badge.classList.remove("hidden");
+          avatar.textContent = userProfile.age.toString().charAt(0) || "N";
+          info.textContent = `বয়স ${userProfile.age} · ${userProfile.categories.length} ক্যাটাগরি`;
+          badge.onclick = () => showOnboarding();
+        }
+        
         fetchArticles(savedCategory);
         setupRealtime();
-        updateProfileBadge();
-        hideOnboarding();
       }
-
-      console.log("[NewsPulse] Initialized. Profile:", userProfile);
     }
 
     // ──────────────────────────────────────────────────────────
-    // CATEGORY TABS EVENT LISTENER
+    // NAV CLICK
     // ──────────────────────────────────────────────────────────
     document.getElementById("categoryNav").addEventListener("click", (e) => {
       const btn = e.target.closest(".tab-btn");
@@ -507,9 +423,8 @@
     });
 
     // ──────────────────────────────────────────────────────────
-    // BOOT
+    // START
     // ──────────────────────────────────────────────────────────
-    // DOM ready হলে initialize করো
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', initializeApp);
     } else {
