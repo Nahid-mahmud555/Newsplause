@@ -32,24 +32,42 @@
      * সব (All) বাটন সবসময় দেখাবে + ইউজারের সিলেক্ট করা ক্যাটাগরিগুলো
      */
     function filterCategoryNav() {
-      const allButtons = document.querySelectorAll("#categoryNav .tab-btn");
+      const categoryNav = document.getElementById("categoryNav");
+      const allButtons = categoryNav.querySelectorAll(".tab-btn");
+      
+      console.log("[FilterNav] Current profile:", userProfile);
       
       if (!userProfile || !userProfile.categories || userProfile.categories.length === 0) {
         // যদি প্রোফাইল না থাকে, সব বাটন দেখাও
-        allButtons.forEach(btn => btn.style.display = "");
+        console.log("[FilterNav] No profile - showing all buttons");
+        allButtons.forEach(btn => {
+          btn.style.removeProperty('display');
+        });
         return;
       }
 
+      // Allowed categories: "all" + user's selected categories
       const allowedCategories = ["all", ...userProfile.categories];
+      console.log("[FilterNav] Allowed categories:", allowedCategories);
+      
+      let visibleCount = 0;
+      let hiddenCount = 0;
       
       allButtons.forEach(btn => {
         const btnCategory = btn.dataset.category;
         if (allowedCategories.includes(btnCategory)) {
-          btn.style.display = ""; // দেখাও
+          btn.style.display = ""; // দেখাও - কিন্তু flex বা inline-flex ওভাররাইট না করে
+          btn.style.removeProperty('display'); // ডিফল্ট CSS ব্যবহার করুক
+          visibleCount++;
+          console.log(`[FilterNav] ✅ Showing: ${btnCategory}`);
         } else {
           btn.style.display = "none"; // হাইড করো
+          hiddenCount++;
+          console.log(`[FilterNav] ❌ Hiding: ${btnCategory}`);
         }
       });
+      
+      console.log(`[FilterNav] Summary: ${visibleCount} visible, ${hiddenCount} hidden`);
     }
 
     // ──────────────────────────────────────────────────────────
@@ -95,7 +113,11 @@
       const overlay = document.getElementById("onboardingOverlay");
       overlay.classList.add("hidden");
       updateProfileBadge();
-      filterCategoryNav(); // নেভিগেশন ফিল্টার আপডেট
+      
+      // একটু ডিলে দিয়ে ফিল্টার কল করো - DOM আপডেটের জন্য
+      setTimeout(() => {
+        filterCategoryNav();
+      }, 100);
     }
 
     function goToStep(stepNumber) {
@@ -147,6 +169,8 @@
       };
       saveUserProfile(userProfile);
 
+      console.log("[Onboarding] Profile saved with categories:", checkedCategories);
+
       // Set active category to the first preferred category
       const preferredCategory = userProfile.categories[0];
       activeCategory = preferredCategory;
@@ -157,7 +181,6 @@
       // Update UI
       updateActiveButton(preferredCategory);
       hideOnboarding();
-      filterCategoryNav(); // নেভিগেশন ফিল্টার
 
       // Fetch filtered news
       fetchArticles(preferredCategory);
@@ -445,16 +468,24 @@
     function initializeApp() {
       // Load user profile
       userProfile = loadUserProfile();
+      
+      console.log("[Init] Loaded profile:", userProfile);
 
       if (!userProfile) {
         // First-time user: show onboarding
+        console.log("[Init] No profile - showing onboarding");
         showOnboarding();
         updateActiveButton("all");
       } else {
         // Returning user: load preferences
-        filterCategoryNav(); // আগে নেভিগেশন ফিল্টার করো
+        console.log("[Init] Returning user - filtering navigation");
+        
+        // আগে নেভিগেশন ফিল্টার করো
+        filterCategoryNav();
         
         const savedCategory = getCategoryPreference();
+        console.log("[Init] Saved category:", savedCategory);
+        
         activeCategory = savedCategory;
         updateActiveButton(savedCategory);
         fetchArticles(savedCategory);
@@ -478,5 +509,10 @@
     // ──────────────────────────────────────────────────────────
     // BOOT
     // ──────────────────────────────────────────────────────────
-    initializeApp();
+    // DOM ready হলে initialize করো
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initializeApp);
+    } else {
+      initializeApp();
+    }
   </script>
