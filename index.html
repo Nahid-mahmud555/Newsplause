@@ -60,11 +60,72 @@
       line-height: 1.6;
     }
 
+    /* Language: English override */
+    body.lang-en {
+      font-family: "Inter", sans-serif;
+    }
+    body.lang-en .card-title,
+    body.lang-en .bullet-item,
+    body.lang-en .cat-badge,
+    body.lang-en .tab-btn,
+    body.lang-en .btn,
+    body.lang-en .welcome-subtitle,
+    body.lang-en .feature-item,
+    body.lang-en .input-label,
+    body.lang-en .checkbox-label,
+    body.lang-en .empty-title,
+    body.lang-en .empty-sub,
+    body.lang-en .source-label,
+    body.lang-en .deadline-label,
+    body.lang-en .result-count,
+    body.lang-en .profile-badge,
+    body.lang-en .footer p,
+    body.lang-en .live-badge,
+    body.lang-en .brand-sub,
+    body.lang-en .error-message {
+      font-family: "Inter", sans-serif;
+    }
+
     /* Scrollbar */
     ::-webkit-scrollbar       { width: 4px; }
     ::-webkit-scrollbar-track { background: var(--bg-base); }
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
     ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+    /* ═══════════════════════════════════════════════
+       LANGUAGE TOGGLE
+    ═══════════════════════════════════════════════ */
+    .lang-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-pill);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+
+    .lang-toggle:hover {
+      border-color: var(--border-hover);
+    }
+
+    .lang-option {
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-muted);
+      transition: all 0.2s ease;
+      font-family: "Inter", sans-serif;
+    }
+
+    .lang-option.active {
+      background: var(--accent);
+      color: #fff;
+    }
 
     /* ═══════════════════════════════════════════════
        ONBOARDING MODAL
@@ -447,7 +508,7 @@
 
     .tab-btn {
       flex-shrink: 0;
-      display: inline-flex;
+      display: inline-flex !important;
       align-items: center;
       gap: 6px;
       padding: 6px 16px;
@@ -503,14 +564,13 @@
       border-radius: var(--radius-pill);
       font-size: 12px;
       color: var(--text-secondary);
-      cursor: pointer;
+      cursor: default;
       transition: all 0.2s ease;
-      margin-left: 16px;
+      margin-left: 8px;
     }
 
-    .profile-badge:hover {
-      border-color: var(--border-hover);
-      background: var(--bg-card-hover);
+    .profile-badge.hidden {
+      display: none;
     }
 
     .profile-avatar {
@@ -776,7 +836,6 @@
   <div class="onboarding-overlay" id="onboardingOverlay">
     <div class="onboarding-modal">
       
-      <!-- Step Indicator -->
       <div class="step-indicator" id="stepIndicator">
         <div class="step-dot active" data-step="1"></div>
         <div class="step-dot" data-step="2"></div>
@@ -785,96 +844,77 @@
       <!-- Step 1: Welcome -->
       <div class="onboarding-step active" id="step1">
         <span class="welcome-icon">◈</span>
-        <h1 class="welcome-title">NewsPulse এ স্বাগতম</h1>
-        <p class="welcome-subtitle">
-          আপনার পছন্দের সংবাদ, আপনার ভাষায়।<br>
-          শুরু করতে কয়েকটি তথ্য দিন।
-        </p>
+        <h1 class="welcome-title" data-bn="NewsPulse এ স্বাগতম" data-en="Welcome to NewsPulse">NewsPulse এ স্বাগতম</h1>
+        <p class="welcome-subtitle" data-bn="আপনার পছন্দের সংবাদ, আপনার ভাষায়।<br>শুরু করতে কয়েকটি তথ্য দিন।" data-en="Your news, in your language.<br>Provide a few details to get started.">আপনার পছন্দের সংবাদ, আপনার ভাষায়।<br>শুরু করতে কয়েকটি তথ্য দিন।</p>
         
         <ul class="feature-list">
           <li class="feature-item">
             <span class="feature-icon">⚡</span>
-            <span>রিয়েল-টাইম বাংলা সংবাদ</span>
+            <span data-bn="রিয়েল-টাইম বাংলা সংবাদ" data-en="Real-time news updates">রিয়েল-টাইম বাংলা সংবাদ</span>
           </li>
           <li class="feature-item">
             <span class="feature-icon">🎯</span>
-            <span>আপনার পছন্দের ক্যাটাগরি</span>
+            <span data-bn="আপনার পছন্দের ক্যাটাগরি" data-en="Your preferred categories">আপনার পছন্দের ক্যাটাগরি</span>
           </li>
           <li class="feature-item">
             <span class="feature-icon">🔒</span>
-            <span>সম্পূর্ণ ফ্রি ও বিজ্ঞাপনমুক্ত</span>
+            <span data-bn="সম্পূর্ণ ফ্রি ও বিজ্ঞাপনমুক্ত" data-en="100% free & ad-free">সম্পূর্ণ ফ্রি ও বিজ্ঞাপনমুক্ত</span>
           </li>
         </ul>
 
-        <button class="btn btn-primary" onclick="goToStep(2)">
-          শুরু করুন →
-        </button>
+        <button class="btn btn-primary" onclick="goToStep(2)" data-bn="শুরু করুন →" data-en="Get Started →">শুরু করুন →</button>
       </div>
 
       <!-- Step 2: Input Collection -->
       <div class="onboarding-step" id="step2">
-        <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 24px; color: var(--text-primary);">
-          আপনার তথ্য দিন
-        </h2>
+        <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 24px; color: var(--text-primary);" data-bn="আপনার তথ্য দিন" data-en="Tell us about yourself">আপনার তথ্য দিন</h2>
 
-        <!-- Age Input -->
         <div class="input-group">
-          <label class="input-label">আপনার বয়স</label>
-          <input 
-            type="number" 
-            class="age-input" 
-            id="ageInput" 
-            placeholder="উদাহরণ: 25" 
-            min="10" 
-            max="100"
-            autocomplete="off"
-          />
-          <div class="error-message" id="ageError">দয়া করে ১০ থেকে ১০০ এর মধ্যে একটি বয়স লিখুন</div>
+          <label class="input-label" data-bn="আপনার বয়স" data-en="Your Age">আপনার বয়স</label>
+          <input type="number" class="age-input" id="ageInput" placeholder="25" min="10" max="100" autocomplete="off" />
+          <div class="error-message" id="ageError" data-bn="দয়া করে ১০ থেকে ১০০ এর মধ্যে একটি বয়স লিখুন" data-en="Please enter an age between 10 and 100">দয়া করে ১০ থেকে ১০০ এর মধ্যে একটি বয়স লিখুন</div>
         </div>
 
-        <!-- Category Selection -->
         <div class="input-group">
-          <label class="input-label">আপনার পছন্দের নিউজ ক্যাটাগরি (এক বা একাধিক)</label>
+          <label class="input-label" data-bn="আপনার পছন্দের নিউজ ক্যাটাগরি (এক বা একাধিক)" data-en="Preferred news categories (one or more)">আপনার পছন্দের নিউজ ক্যাটাগরি (এক বা একাধিক)</label>
           <div class="category-grid" id="categoryGrid">
             <label class="category-checkbox" data-category="technology">
               <input type="checkbox" value="technology" />
               <span class="checkbox-indicator"></span>
               <span class="checkbox-icon">⬡</span>
-              <span class="checkbox-label">প্রযুক্তি</span>
+              <span class="checkbox-label" data-bn="প্রযুক্তি" data-en="Technology">প্রযুক্তি</span>
             </label>
             <label class="category-checkbox" data-category="national">
               <input type="checkbox" value="national" />
               <span class="checkbox-indicator"></span>
               <span class="checkbox-icon">◉</span>
-              <span class="checkbox-label">জাতীয়</span>
+              <span class="checkbox-label" data-bn="জাতীয়" data-en="National">জাতীয়</span>
             </label>
             <label class="category-checkbox" data-category="sports">
               <input type="checkbox" value="sports" />
               <span class="checkbox-indicator"></span>
               <span class="checkbox-icon">◎</span>
-              <span class="checkbox-label">খেলাধুলা</span>
+              <span class="checkbox-label" data-bn="খেলাধুলা" data-en="Sports">খেলাধুলা</span>
             </label>
             <label class="category-checkbox" data-category="jobs">
               <input type="checkbox" value="jobs" />
               <span class="checkbox-indicator"></span>
               <span class="checkbox-icon">◇</span>
-              <span class="checkbox-label">চাকরি</span>
+              <span class="checkbox-label" data-bn="চাকরি" data-en="Jobs">চাকরি</span>
             </label>
             <label class="category-checkbox" data-category="crime">
               <input type="checkbox" value="crime" />
               <span class="checkbox-indicator"></span>
               <span class="checkbox-icon">○</span>
-              <span class="checkbox-label">বিশ্ব</span>
+              <span class="checkbox-label" data-bn="বিশ্ব" data-en="World">বিশ্ব</span>
             </label>
           </div>
-          <div class="error-message" id="categoryError">দয়া করে কমপক্ষে একটি ক্যাটাগরি নির্বাচন করুন</div>
+          <div class="error-message" id="categoryError" data-bn="দয়া করে কমপক্ষে একটি ক্যাটাগরি নির্বাচন করুন" data-en="Please select at least one category">দয়া করে কমপক্ষে একটি ক্যাটাগরি নির্বাচন করুন</div>
         </div>
 
         <div class="btn-row">
-          <button class="btn btn-secondary" onclick="goToStep(1)">← পিছনে</button>
-          <button class="btn btn-primary" onclick="completeOnboarding()">
-            সম্পন্ন ✓
-          </button>
+          <button class="btn btn-secondary" onclick="goToStep(1)" data-bn="← পিছনে" data-en="← Back">← পিছনে</button>
+          <button class="btn btn-primary" onclick="completeOnboarding()" data-bn="সম্পন্ন ✓" data-en="Done ✓">সম্পন্ন ✓</button>
         </div>
       </div>
 
@@ -886,59 +926,61 @@
   ══════════════════════════════════════════ -->
   <header class="header">
     <div class="header-inner">
-
-      <!-- Brand row -->
       <div class="brand-row">
         <div class="brand">
           <span class="brand-icon">◈</span>
           <span class="brand-name">NewsPulse</span>
-          <span class="brand-sub">— বাংলা সংবাদ</span>
+          <span class="brand-sub" data-bn="— বাংলা সংবাদ" data-en="— News in Bengali">— বাংলা সংবাদ</span>
         </div>
-        <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <!-- Language Toggle -->
+          <div class="lang-toggle" id="langToggle" title="Toggle Language">
+            <span class="lang-option active" data-lang="bn">বাংলা</span>
+            <span class="lang-option" data-lang="en">EN</span>
+          </div>
           <div class="live-badge">
             <span class="live-dot"></span>
-            সরাসরি
+            <span data-bn="সরাসরি" data-en="Live">সরাসরি</span>
           </div>
-          <!-- Profile Badge (shows after onboarding) -->
-          <div class="profile-badge hidden" id="profileBadge" title="আপনার প্রোফাইল">
+          <div class="profile-badge hidden" id="profileBadge">
             <span class="profile-avatar" id="profileAvatar">N</span>
-            <span id="profileInfo">প্রোফাইল</span>
+            <span id="profileInfo"></span>
           </div>
         </div>
       </div>
 
-      <!-- Category tabs -->
       <nav class="category-nav" aria-label="সংবাদ বিভাগ" id="categoryNav">
         <button class="tab-btn active" data-category="all">
-          <span class="tab-icon">◈</span> সব
+          <span class="tab-icon">◈</span>
+          <span data-bn="সব" data-en="All">সব</span>
         </button>
         <button class="tab-btn" data-category="technology">
-          <span class="tab-icon">⬡</span> প্রযুক্তি
+          <span class="tab-icon">⬡</span>
+          <span data-bn="প্রযুক্তি" data-en="Tech">প্রযুক্তি</span>
         </button>
         <button class="tab-btn" data-category="national">
-          <span class="tab-icon">◉</span> জাতীয়
+          <span class="tab-icon">◉</span>
+          <span data-bn="জাতীয়" data-en="National">জাতীয়</span>
         </button>
         <button class="tab-btn" data-category="sports">
-          <span class="tab-icon">◎</span> খেলাধুলা
+          <span class="tab-icon">◎</span>
+          <span data-bn="খেলাধুলা" data-en="Sports">খেলাধুলা</span>
         </button>
         <button class="tab-btn" data-category="jobs">
-          <span class="tab-icon">◇</span> চাকরি
+          <span class="tab-icon">◇</span>
+          <span data-bn="চাকরি" data-en="Jobs">চাকরি</span>
         </button>
         <button class="tab-btn" data-category="crime">
-          <span class="tab-icon">○</span> বিশ্ব
+          <span class="tab-icon">○</span>
+          <span data-bn="বিশ্ব" data-en="World">বিশ্ব</span>
         </button>
       </nav>
-
     </div>
   </header>
 
-  <!-- ══════════════════════════════════════════
-       MAIN
-  ══════════════════════════════════════════ -->
   <main class="main">
     <p class="result-count" id="resultCount"></p>
     <div class="grid" id="newsGrid">
-      <!-- Skeleton placeholders -->
       <div class="skeleton-card">
         <div class="sk-row"><div class="skeleton sk-s"></div><div class="skeleton sk-xs"></div></div>
         <div class="skeleton sk-l" style="height:16px"></div>
@@ -975,11 +1017,8 @@
     </div>
   </main>
 
-  <!-- ══════════════════════════════════════════
-       FOOTER
-  ══════════════════════════════════════════ -->
   <footer class="footer">
-    <p>NewsPulse &middot; স্বয়ংক্রিয় সংবাদ সংগ্রহ &middot; প্রতি ৬ ঘণ্টায় আপডেট</p>
+    <p data-bn="NewsPulse · স্বয়ংক্রিয় সংবাদ সংগ্রহ · প্রতি ৬ ঘণ্টায় আপডেট" data-en="NewsPulse · Automated news aggregation · Updated every 6 hours">NewsPulse · স্বয়ংক্রিয় সংবাদ সংগ্রহ · প্রতি ৬ ঘণ্টায় আপডেট</p>
   </footer>
 
 
@@ -992,6 +1031,7 @@
 
     const STORAGE_KEY_CATEGORY = "newspulse_preferred_category";
     const STORAGE_KEY_PROFILE  = "newspulse_user_profile";
+    const STORAGE_KEY_LANG     = "newspulse_language";
     
     const VALID_CATEGORIES = ["all", "technology", "national", "sports", "jobs", "crime"];
 
@@ -1006,19 +1046,116 @@
     // ──────────────────────────────────────────────────────────
     let activeCategory = "all";
     let realtimeChannel = null;
-    let userProfile = null; // { age, categories: [] }
+    let userProfile = null;
+    let currentLang = "bn"; // bn | en
+
+    // ──────────────────────────────────────────────────────────
+    // LANGUAGE SYSTEM
+    // ──────────────────────────────────────────────────────────
+    function applyLanguage(lang) {
+      currentLang = lang;
+      
+      // Save preference
+      try { localStorage.setItem(STORAGE_KEY_LANG, lang); } catch(e) {}
+      
+      // Update body class for font family
+      document.body.classList.toggle("lang-en", lang === "en");
+      
+      // Update all data-bn/data-en elements (only for UI elements, NOT for news content)
+      document.querySelectorAll("[data-bn][data-en]").forEach(el => {
+        const text = lang === "bn" ? el.getAttribute("data-bn") : el.getAttribute("data-en");
+        if (text !== null && text !== undefined) {
+          el.innerHTML = text;
+        }
+      });
+      
+      // Update lang toggle buttons
+      document.querySelectorAll("#langToggle .lang-option").forEach(opt => {
+        opt.classList.toggle("active", opt.dataset.lang === lang);
+      });
+      
+      // Update HTML lang attribute
+      document.documentElement.lang = lang === "bn" ? "bn" : "en";
+      
+      // Update category labels in nav
+      updateCategoryLabels(lang);
+      
+      // Update placeholder
+      const ageInput = document.getElementById("ageInput");
+      if (ageInput) {
+        ageInput.placeholder = lang === "bn" ? "উদাহরণ: 25" : "Example: 25";
+      }
+      
+      console.log("[Lang] Switched to:", lang);
+    }
+
+    function updateCategoryLabels(lang) {
+      const labelMap = {
+        all: { bn: "সব", en: "All" },
+        technology: { bn: "প্রযুক্তি", en: "Tech" },
+        national: { bn: "জাতীয়", en: "National" },
+        sports: { bn: "খেলাধুলা", en: "Sports" },
+        jobs: { bn: "চাকরি", en: "Jobs" },
+        crime: { bn: "বিশ্ব", en: "World" }
+      };
+      
+      document.querySelectorAll("#categoryNav .tab-btn").forEach(btn => {
+        const cat = btn.dataset.category;
+        if (labelMap[cat]) {
+          const span = btn.querySelector("span:last-child");
+          if (span) span.textContent = labelMap[cat][lang];
+        }
+      });
+    }
+
+    function loadLanguagePreference() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY_LANG);
+        if (saved === "bn" || saved === "en") return saved;
+      } catch(e) {}
+      return "bn";
+    }
+
+    // Language toggle click
+    document.getElementById("langToggle").addEventListener("click", (e) => {
+      const option = e.target.closest(".lang-option");
+      if (!option) return;
+      const lang = option.dataset.lang;
+      if (lang === currentLang) return;
+      applyLanguage(lang);
+      // 🔥 RE-RENDER cards with new language
+      fetchArticles(activeCategory);
+    });
+
+    // ──────────────────────────────────────────────────────────
+    // CATEGORY NAVIGATION VISIBILITY
+    // ──────────────────────────────────────────────────────────
+    
+    function filterCategoryNav() {
+      const allButtons = document.querySelectorAll("#categoryNav .tab-btn");
+      
+      if (!userProfile || !userProfile.categories || userProfile.categories.length === 0) {
+        allButtons.forEach(btn => {
+          btn.style.setProperty('display', 'inline-flex', 'important');
+        });
+        return;
+      }
+
+      const allowed = ["all", ...userProfile.categories];
+      
+      allButtons.forEach(btn => {
+        const cat = btn.dataset.category;
+        if (allowed.includes(cat)) {
+          btn.style.setProperty('display', 'inline-flex', 'important');
+        } else {
+          btn.style.setProperty('display', 'none', 'important');
+        }
+      });
+    }
 
     // ──────────────────────────────────────────────────────────
     // ONBOARDING LOGIC
     // ──────────────────────────────────────────────────────────
-    function hasUserProfile() {
-      try {
-        return localStorage.getItem(STORAGE_KEY_PROFILE) !== null;
-      } catch {
-        return false;
-      }
-    }
-
     function loadUserProfile() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY_PROFILE);
@@ -1043,30 +1180,37 @@
     }
 
     function showOnboarding() {
-      document.getElementById("onboardingOverlay").classList.remove("hidden");
+      const overlay = document.getElementById("onboardingOverlay");
+      overlay.classList.remove("hidden");
+      overlay.style.display = "flex";
       goToStep(1);
     }
 
     function hideOnboarding() {
       const overlay = document.getElementById("onboardingOverlay");
+      overlay.style.display = "none";
       overlay.classList.add("hidden");
       updateProfileBadge();
+      
+      setTimeout(() => {
+        filterCategoryNav();
+      }, 100);
     }
 
     function goToStep(stepNumber) {
-      // Update steps
       document.querySelectorAll(".onboarding-step").forEach(s => s.classList.remove("active"));
       document.getElementById(`step${stepNumber}`).classList.add("active");
 
-      // Update step indicators
       document.querySelectorAll(".step-dot").forEach((dot, i) => {
         dot.classList.remove("active", "completed");
         if (i + 1 === stepNumber) dot.classList.add("active");
         if (i + 1 < stepNumber) dot.classList.add("completed");
       });
 
-      // Hide error messages
       document.querySelectorAll(".error-message").forEach(el => el.classList.remove("show"));
+      
+      // Re-apply language after step change
+      applyLanguage(currentLang);
     }
 
     function completeOnboarding() {
@@ -1074,16 +1218,13 @@
       const ageError = document.getElementById("ageError");
       const categoryError = document.getElementById("categoryError");
       
-      // Validate age
       const age = parseInt(ageInput.value);
       if (!age || age < 10 || age > 100) {
         ageError.classList.add("show");
-        ageInput.focus();
         return;
       }
       ageError.classList.remove("show");
 
-      // Validate categories
       const checkedCategories = [];
       document.querySelectorAll("#categoryGrid input[type='checkbox']:checked").forEach(cb => {
         checkedCategories.push(cb.value);
@@ -1095,31 +1236,22 @@
       }
       categoryError.classList.remove("show");
 
-      // Save user profile
       userProfile = {
         age: age,
         categories: checkedCategories
       };
       saveUserProfile(userProfile);
 
-      // Set active category to the first preferred category
       const preferredCategory = userProfile.categories[0];
       activeCategory = preferredCategory;
-
-      // Save category preference
       saveCategoryPreference(preferredCategory);
-
-      // Update UI
       updateActiveButton(preferredCategory);
+      
       hideOnboarding();
+      filterCategoryNav();
 
-      // Fetch filtered news
       fetchArticles(preferredCategory);
-
-      // Setup realtime
       setupRealtime();
-
-      console.log("[Onboarding] Complete. Profile:", userProfile);
     }
 
     function updateProfileBadge() {
@@ -1129,13 +1261,17 @@
 
       if (userProfile) {
         badge.classList.remove("hidden");
+        badge.style.cursor = "default";
         avatar.textContent = userProfile.age.toString().charAt(0) || "N";
-        info.textContent = `বয়স ${userProfile.age} · ${userProfile.categories.length} ক্যাটাগরি`;
         
-        // Re-onboard on click
-        badge.onclick = () => {
-          showOnboarding();
-        };
+        if (currentLang === "bn") {
+          info.textContent = `বয়স ${userProfile.age} · ${userProfile.categories.length} ক্যাটাগরি`;
+        } else {
+          info.textContent = `Age ${userProfile.age} · ${userProfile.categories.length} categories`;
+        }
+        
+        // ❌ NO CLICK HANDLER — profile is saved, no re-onboarding
+        badge.onclick = null;
       }
     }
 
@@ -1153,7 +1289,6 @@
         checkbox.classList.remove("selected");
       }
 
-      // Hide category error when at least one selected
       const anyChecked = document.querySelectorAll("#categoryGrid input[type='checkbox']:checked").length > 0;
       if (anyChecked) {
         document.getElementById("categoryError").classList.remove("show");
@@ -1166,20 +1301,14 @@
     function saveCategoryPreference(category) {
       try {
         localStorage.setItem(STORAGE_KEY_CATEGORY, category);
-      } catch (error) {
-        console.warn("[Preference] Could not save category:", error.message);
-      }
+      } catch (error) {}
     }
 
     function getCategoryPreference() {
       try {
         const saved = localStorage.getItem(STORAGE_KEY_CATEGORY);
-        if (saved && VALID_CATEGORIES.includes(saved)) {
-          return saved;
-        }
-      } catch (error) {
-        console.warn("[Preference] Could not read category:", error.message);
-      }
+        if (saved && VALID_CATEGORIES.includes(saved)) return saved;
+      } catch (error) {}
       return "all";
     }
 
@@ -1190,12 +1319,13 @@
       activeCategory = category;
       saveCategoryPreference(category);
       updateActiveButton(category);
+      filterCategoryNav();
       setupRealtime();
       fetchArticles(category);
     }
 
     function updateActiveButton(category) {
-      document.querySelectorAll(".tab-btn").forEach((btn) => {
+      document.querySelectorAll(".tab-btn").forEach(btn => {
         btn.classList.remove("active");
         if (btn.dataset.category === category) {
           btn.classList.add("active");
@@ -1211,6 +1341,14 @@
       const mins  = Math.floor(diff / 60000);
       const hours = Math.floor(mins / 60);
       const days  = Math.floor(hours / 24);
+      
+      if (currentLang === "en") {
+        if (days  > 0) return `${days}d ago`;
+        if (hours > 0) return `${hours}h ago`;
+        if (mins  > 0) return `${mins}m ago`;
+        return "Just now";
+      }
+      
       if (days  > 0) return `${days} দিন আগে`;
       if (hours > 0) return `${hours} ঘণ্টা আগে`;
       if (mins  > 0) return `${mins} মিনিট আগে`;
@@ -1229,29 +1367,33 @@
     }
 
     function catLabel(cat) {
-      const map = {
+      const mapBN = {
         technology: "প্রযুক্তি",
         national:   "জাতীয়",
         sports:     "খেলাধুলা",
         jobs:       "চাকরি",
         crime:      "বিশ্ব",
       };
-      return map[cat] || cat;
+      const mapEN = {
+        technology: "Tech",
+        national:   "National",
+        sports:     "Sports",
+        jobs:       "Jobs",
+        crime:      "World",
+      };
+      return currentLang === "bn" ? (mapBN[cat] || cat) : (mapEN[cat] || cat);
     }
 
     function formatDeadline(dateStr) {
       if (!dateStr) return "";
-      return new Date(dateStr).toLocaleDateString("bn-BD", {
+      const locale = currentLang === "bn" ? "bn-BD" : "en-US";
+      return new Date(dateStr).toLocaleDateString(locale, {
         day: "numeric", month: "short", year: "numeric"
       });
     }
 
     function escapeHtml(str = "") {
-      return str
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;");
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
     }
 
     // ──────────────────────────────────────────────────────────
@@ -1260,10 +1402,7 @@
     function renderSkeletons(count = 6) {
       return Array.from({ length: count }).map(() => `
         <div class="skeleton-card">
-          <div class="sk-row">
-            <div class="skeleton sk-s"></div>
-            <div class="skeleton sk-xs"></div>
-          </div>
+          <div class="sk-row"><div class="skeleton sk-s"></div><div class="skeleton sk-xs"></div></div>
           <div class="skeleton sk-l" style="height:16px"></div>
           <div class="skeleton" style="height:14px;width:75%"></div>
           <div class="sk-bullets">
@@ -1277,16 +1416,34 @@
     }
 
     function renderCard(article, index) {
-      const bullets = (article.bengaliSummaries || []).map((b) => `
-        <li class="bullet-item">
-          <span class="bullet-arrow">▸</span>
-          <span>${escapeHtml(b)}</span>
-        </li>
+      // 🔥 LANGUAGE-BASED CONTENT SELECTION
+      // বাংলা = ডিফল্ট bengaliTitle / bengaliSummaries
+      // ইংরেজি = englishTitle / englishSummaries (fallback to bengali if not available)
+      
+      let title, summaries;
+      
+      if (currentLang === "en") {
+        // Try English first, fallback to Bengali
+        title = article.englishTitle || article.bengaliTitle || "No Title";
+        summaries = article.englishSummaries || article.bengaliSummaries || [];
+      } else {
+        // Default: Bengali
+        title = article.bengaliTitle || article.englishTitle || "কোনো শিরোনাম নেই";
+        summaries = article.bengaliSummaries || article.englishSummaries || [];
+      }
+      
+      const bullets = (summaries || []).map((b) => `
+        <li class="bullet-item"><span class="bullet-arrow">▸</span><span>${escapeHtml(b)}</span></li>
       `).join("");
 
+      const sourceText = currentLang === "bn" ? "সূত্র" : "Source";
+      const readText = currentLang === "bn" ? "পড়ুন →" : "Read →";
+      const deadlineText = currentLang === "bn" ? "শেষ" : "Deadline";
+      const unknownText = currentLang === "bn" ? "অজানা" : "Unknown";
+
       const deadlineHtml = (article.category === "jobs" && article.deadline)
-        ? `<span class="deadline-label">শেষ: ${formatDeadline(article.deadline)}</span>`
-        : `<span class="source-label">সূত্র: <span class="source-name">${escapeHtml(article.source_name || "অজানা")}</span></span>`;
+        ? `<span class="deadline-label">${deadlineText}: ${formatDeadline(article.deadline)}</span>`
+        : `<span class="source-label">${sourceText}: <span class="source-name">${escapeHtml(article.source_name || unknownText)}</span></span>`;
 
       return `
         <article class="card" style="animation-delay:${index * 55}ms" role="article">
@@ -1294,32 +1451,32 @@
             <span class="cat-badge ${catClass(article.category)}">${catLabel(article.category)}</span>
             <time class="time-ago">${timeAgo(article.created_at)}</time>
           </div>
-          <h2 class="card-title">${escapeHtml(article.bengaliTitle)}</h2>
+          <h2 class="card-title">${escapeHtml(title)}</h2>
           <ul class="bullet-list">${bullets}</ul>
           <div class="card-footer">
             ${deadlineHtml}
-            <a href="${escapeHtml(article.sourceUrl)}" target="_blank" rel="noopener noreferrer"
-               class="read-link" aria-label="মূল সংবাদ পড়ুন">পড়ুন →</a>
+            <a href="${escapeHtml(article.sourceUrl)}" target="_blank" rel="noopener noreferrer" class="read-link">${readText}</a>
           </div>
         </article>
       `;
     }
 
     function renderEmpty(category) {
-      const msg = category === "all"
-        ? "পাইপলাইন শীঘ্রই সংবাদ আনবে"
-        : "এই বিভাগে এখন কোনো সংবাদ নেই";
+      const msg = currentLang === "bn"
+        ? (category === "all" ? "পাইপলাইন শীঘ্রই সংবাদ আনবে" : "এই বিভাগে এখন কোনো সংবাদ নেই")
+        : (category === "all" ? "News pipeline coming soon" : "No news in this category yet");
+      const titleText = currentLang === "bn" ? "কোনো সংবাদ নেই" : "No news found";
       return `
         <div class="empty-state">
           <div class="empty-icon">◈</div>
-          <p class="empty-title">কোনো সংবাদ নেই</p>
+          <p class="empty-title">${titleText}</p>
           <p class="empty-sub">${msg}</p>
         </div>
       `;
     }
 
     // ──────────────────────────────────────────────────────────
-    // FETCH ARTICLES WITH CATEGORY FILTERING
+    // FETCH ARTICLES
     // ──────────────────────────────────────────────────────────
     async function fetchArticles(category) {
       const grid  = document.getElementById("newsGrid");
@@ -1329,97 +1486,74 @@
       count.textContent = "";
 
       try {
-        let query = db
-          .from("news_feed")
-          .select("*", { count: "exact" })
-          .order("created_at", { ascending: false })
-          .limit(50);
-
-        if (category !== "all") {
-          query = query.eq("category", category);
-        }
+        let query = db.from("news_feed").select("*", { count: "exact" }).order("created_at", { ascending: false }).limit(50);
+        if (category !== "all") query = query.eq("category", category);
 
         const { data, error, count: total } = await query;
+        if (error) { grid.innerHTML = renderEmpty(category); return; }
 
-        if (error) {
-          console.error("Supabase error:", error.message);
-          grid.innerHTML = renderEmpty(category);
-          count.textContent = "ডেটা লোড করতে সমস্যা হয়েছে";
-          return;
-        }
-
-        if (category === "all") {
-          count.textContent = `${total || 0} টি সংবাদ পাওয়া গেছে (সকল বিভাগ)`;
+        if (currentLang === "bn") {
+          count.textContent = category === "all" ? `${total || 0} টি সংবাদ (সকল)` : `${total || 0} টি সংবাদ (${catLabel(category)})`;
         } else {
-          count.textContent = `${total || 0} টি সংবাদ পাওয়া গেছে (${catLabel(category)} বিভাগ)`;
+          count.textContent = category === "all" ? `${total || 0} articles (All)` : `${total || 0} articles (${catLabel(category)})`;
         }
 
-        if (!data || data.length === 0) {
-          grid.innerHTML = renderEmpty(category);
-          return;
-        }
+        if (!data || data.length === 0) { grid.innerHTML = renderEmpty(category); return; }
 
-        let filteredData = data;
-        if (category !== "all") {
-          filteredData = data.filter(article => article.category === category);
-        }
-
+        let filteredData = category !== "all" ? data.filter(a => a.category === category) : data;
         grid.innerHTML = filteredData.map((article, i) => renderCard(article, i)).join("");
       } catch (err) {
-        console.error("[Fetch] Unexpected error:", err);
         grid.innerHTML = renderEmpty(category);
-        count.textContent = "ডেটা লোড করতে সমস্যা হয়েছে";
       }
     }
 
     // ──────────────────────────────────────────────────────────
-    // REALTIME SUBSCRIPTION
+    // REALTIME
     // ──────────────────────────────────────────────────────────
     function setupRealtime() {
-      if (realtimeChannel) {
-        db.removeChannel(realtimeChannel);
-      }
-
+      if (realtimeChannel) db.removeChannel(realtimeChannel);
       realtimeChannel = db.channel("newspulse_live")
-        .on("postgres_changes", {
-          event: "INSERT",
-          schema: "public",
-          table: "news_feed",
-        }, (payload) => {
-          if (activeCategory === "all" || payload.new.category === activeCategory) {
-            fetchArticles(activeCategory);
-          }
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "news_feed" }, (payload) => {
+          if (activeCategory === "all" || payload.new.category === activeCategory) fetchArticles(activeCategory);
         })
         .subscribe();
     }
 
     // ──────────────────────────────────────────────────────────
-    // INITIALIZATION
+    // INIT
     // ──────────────────────────────────────────────────────────
     function initializeApp() {
+      // Load language preference first
+      currentLang = loadLanguagePreference();
+      applyLanguage(currentLang);
+      
       // Load user profile
       userProfile = loadUserProfile();
 
       if (!userProfile) {
-        // First-time user: show onboarding
+        console.log("[Init] No profile - showing onboarding");
         showOnboarding();
         updateActiveButton("all");
+        setTimeout(() => applyLanguage(currentLang), 50);
       } else {
-        // Returning user: load preferences
+        console.log("[Init] Returning user - profile already saved");
+        
+        document.getElementById("onboardingOverlay").style.display = "none";
+        document.getElementById("onboardingOverlay").classList.add("hidden");
+        
+        filterCategoryNav();
+        
         const savedCategory = getCategoryPreference();
         activeCategory = savedCategory;
         updateActiveButton(savedCategory);
         fetchArticles(savedCategory);
         setupRealtime();
         updateProfileBadge();
-        hideOnboarding();
       }
-
-      console.log("[NewsPulse] Initialized. Profile:", userProfile);
     }
 
     // ──────────────────────────────────────────────────────────
-    // CATEGORY TABS EVENT LISTENER
+    // NAV CLICK
     // ──────────────────────────────────────────────────────────
     document.getElementById("categoryNav").addEventListener("click", (e) => {
       const btn = e.target.closest(".tab-btn");
@@ -1428,9 +1562,13 @@
     });
 
     // ──────────────────────────────────────────────────────────
-    // BOOT
+    // START
     // ──────────────────────────────────────────────────────────
-    initializeApp();
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initializeApp);
+    } else {
+      initializeApp();
+    }
   </script>
 </body>
 </html>
