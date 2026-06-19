@@ -67,6 +67,305 @@
     ::-webkit-scrollbar-thumb:hover { background: #475569; }
 
     /* ═══════════════════════════════════════════════
+       ONBOARDING MODAL
+    ═══════════════════════════════════════════════ */
+    .onboarding-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(2, 8, 23, 0.95);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.3s ease;
+      padding: 20px;
+    }
+
+    .onboarding-overlay.hidden {
+      display: none;
+    }
+
+    .onboarding-modal {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px 32px;
+      max-width: 520px;
+      width: 100%;
+      animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 25px 80px rgba(0,0,0,0.6), 0 0 0 1px var(--border);
+    }
+
+    /* Onboarding Steps */
+    .onboarding-step {
+      display: none;
+    }
+
+    .onboarding-step.active {
+      display: block;
+      animation: fadeInUp 0.35s ease both;
+    }
+
+    /* Welcome Step */
+    .welcome-icon {
+      font-size: 48px;
+      margin-bottom: 20px;
+      display: block;
+      text-align: center;
+      opacity: 0.8;
+    }
+
+    .welcome-title {
+      font-family: "Inter", sans-serif;
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--text-primary);
+      text-align: center;
+      margin-bottom: 12px;
+      letter-spacing: -0.02em;
+    }
+
+    .welcome-subtitle {
+      font-size: 16px;
+      color: var(--text-secondary);
+      text-align: center;
+      margin-bottom: 32px;
+      line-height: 1.7;
+    }
+
+    .feature-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      padding: 10px 16px;
+      background: var(--bg-card);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .feature-icon {
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    /* Input Step */
+    .input-group {
+      margin-bottom: 24px;
+    }
+
+    .input-label {
+      font-family: "Inter", sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .age-input {
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-size: 15px;
+      font-family: "Inter", sans-serif;
+      transition: all 0.2s ease;
+      outline: none;
+    }
+
+    .age-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+
+    .age-input::placeholder {
+      color: var(--text-faint);
+    }
+
+    /* Category Checkboxes */
+    .category-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .category-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+
+    .category-checkbox:hover {
+      border-color: var(--border-hover);
+      background: var(--bg-card-hover);
+    }
+
+    .category-checkbox.selected {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    .category-checkbox input[type="checkbox"] {
+      display: none;
+    }
+
+    .checkbox-indicator {
+      width: 20px;
+      height: 20px;
+      border-radius: 6px;
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .category-checkbox.selected .checkbox-indicator {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .checkbox-indicator::after {
+      content: "✓";
+      color: white;
+      font-size: 12px;
+      font-weight: bold;
+      opacity: 0;
+      transform: scale(0);
+      transition: all 0.2s ease;
+    }
+
+    .category-checkbox.selected .checkbox-indicator::after {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .checkbox-label {
+      font-size: 14px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .checkbox-icon {
+      font-size: 16px;
+      opacity: 0.6;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border-radius: var(--radius-pill);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      font-family: "Hind Siliguri", sans-serif;
+      transition: all 0.2s ease;
+      width: 100%;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #ffffff;
+      box-shadow: 0 0 24px var(--accent-glow);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 0 32px var(--accent-glow);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--border-hover);
+      color: var(--text-primary);
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .btn-row .btn {
+      flex: 1;
+    }
+
+    /* Step Indicator */
+    .step-indicator {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .step-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--border);
+      transition: all 0.3s ease;
+    }
+
+    .step-dot.active {
+      background: var(--accent);
+      width: 24px;
+      border-radius: 4px;
+    }
+
+    .step-dot.completed {
+      background: #10b981;
+    }
+
+    .error-message {
+      color: #fca5a5;
+      font-size: 12px;
+      margin-top: 8px;
+      display: none;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .error-message.show {
+      display: block;
+    }
+
+    /* ═══════════════════════════════════════════════
        HEADER
     ═══════════════════════════════════════════════ */
     .header {
@@ -191,6 +490,40 @@
       font-size: 11px;
       color: var(--text-faint);
       margin-bottom: 20px;
+    }
+
+    /* User Profile Badge */
+    .profile-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-pill);
+      font-size: 12px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-left: 16px;
+    }
+
+    .profile-badge:hover {
+      border-color: var(--border-hover);
+      background: var(--bg-card-hover);
+    }
+
+    .profile-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: white;
     }
 
     /* ═══════════════════════════════════════════════
@@ -405,16 +738,148 @@
       to   { opacity: 1; transform: translateY(0); }
     }
 
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
     @keyframes pulse-dot {
       0%, 100% { opacity: 1; transform: scale(1); }
       50%       { opacity: 0.45; transform: scale(0.75); }
     }
 
-    /* Responsive hide for brand sub */
-    @media (max-width: 480px) { .brand-sub { display: none; } }
+    /* Responsive */
+    @media (max-width: 480px) { 
+      .brand-sub { display: none; }
+      .onboarding-modal {
+        padding: 32px 24px;
+      }
+      .category-grid {
+        grid-template-columns: 1fr;
+      }
+      .welcome-title {
+        font-size: 24px;
+      }
+    }
   </style>
 </head>
 <body>
+
+  <!-- ══════════════════════════════════════════
+       ONBOARDING MODAL
+  ══════════════════════════════════════════ -->
+  <div class="onboarding-overlay" id="onboardingOverlay">
+    <div class="onboarding-modal">
+      
+      <!-- Step Indicator -->
+      <div class="step-indicator" id="stepIndicator">
+        <div class="step-dot active" data-step="1"></div>
+        <div class="step-dot" data-step="2"></div>
+      </div>
+
+      <!-- Step 1: Welcome -->
+      <div class="onboarding-step active" id="step1">
+        <span class="welcome-icon">◈</span>
+        <h1 class="welcome-title">NewsPulse এ স্বাগতম</h1>
+        <p class="welcome-subtitle">
+          আপনার পছন্দের সংবাদ, আপনার ভাষায়।<br>
+          শুরু করতে কয়েকটি তথ্য দিন।
+        </p>
+        
+        <ul class="feature-list">
+          <li class="feature-item">
+            <span class="feature-icon">⚡</span>
+            <span>রিয়েল-টাইম বাংলা সংবাদ</span>
+          </li>
+          <li class="feature-item">
+            <span class="feature-icon">🎯</span>
+            <span>আপনার পছন্দের ক্যাটাগরি</span>
+          </li>
+          <li class="feature-item">
+            <span class="feature-icon">🔒</span>
+            <span>সম্পূর্ণ ফ্রি ও বিজ্ঞাপনমুক্ত</span>
+          </li>
+        </ul>
+
+        <button class="btn btn-primary" onclick="goToStep(2)">
+          শুরু করুন →
+        </button>
+      </div>
+
+      <!-- Step 2: Input Collection -->
+      <div class="onboarding-step" id="step2">
+        <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 24px; color: var(--text-primary);">
+          আপনার তথ্য দিন
+        </h2>
+
+        <!-- Age Input -->
+        <div class="input-group">
+          <label class="input-label">আপনার বয়স</label>
+          <input 
+            type="number" 
+            class="age-input" 
+            id="ageInput" 
+            placeholder="উদাহরণ: 25" 
+            min="10" 
+            max="100"
+            autocomplete="off"
+          />
+          <div class="error-message" id="ageError">দয়া করে ১০ থেকে ১০০ এর মধ্যে একটি বয়স লিখুন</div>
+        </div>
+
+        <!-- Category Selection -->
+        <div class="input-group">
+          <label class="input-label">আপনার পছন্দের নিউজ ক্যাটাগরি (এক বা একাধিক)</label>
+          <div class="category-grid" id="categoryGrid">
+            <label class="category-checkbox" data-category="technology">
+              <input type="checkbox" value="technology" />
+              <span class="checkbox-indicator"></span>
+              <span class="checkbox-icon">⬡</span>
+              <span class="checkbox-label">প্রযুক্তি</span>
+            </label>
+            <label class="category-checkbox" data-category="national">
+              <input type="checkbox" value="national" />
+              <span class="checkbox-indicator"></span>
+              <span class="checkbox-icon">◉</span>
+              <span class="checkbox-label">জাতীয়</span>
+            </label>
+            <label class="category-checkbox" data-category="sports">
+              <input type="checkbox" value="sports" />
+              <span class="checkbox-indicator"></span>
+              <span class="checkbox-icon">◎</span>
+              <span class="checkbox-label">খেলাধুলা</span>
+            </label>
+            <label class="category-checkbox" data-category="jobs">
+              <input type="checkbox" value="jobs" />
+              <span class="checkbox-indicator"></span>
+              <span class="checkbox-icon">◇</span>
+              <span class="checkbox-label">চাকরি</span>
+            </label>
+            <label class="category-checkbox" data-category="crime">
+              <input type="checkbox" value="crime" />
+              <span class="checkbox-indicator"></span>
+              <span class="checkbox-icon">○</span>
+              <span class="checkbox-label">বিশ্ব</span>
+            </label>
+          </div>
+          <div class="error-message" id="categoryError">দয়া করে কমপক্ষে একটি ক্যাটাগরি নির্বাচন করুন</div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="goToStep(1)">← পিছনে</button>
+          <button class="btn btn-primary" onclick="completeOnboarding()">
+            সম্পন্ন ✓
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
 
   <!-- ══════════════════════════════════════════
        HEADER
@@ -429,9 +894,16 @@
           <span class="brand-name">NewsPulse</span>
           <span class="brand-sub">— বাংলা সংবাদ</span>
         </div>
-        <div class="live-badge">
-          <span class="live-dot"></span>
-          সরাসরি
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div class="live-badge">
+            <span class="live-dot"></span>
+            সরাসরি
+          </div>
+          <!-- Profile Badge (shows after onboarding) -->
+          <div class="profile-badge hidden" id="profileBadge" title="আপনার প্রোফাইল">
+            <span class="profile-avatar" id="profileAvatar">N</span>
+            <span id="profileInfo">প্রোফাইল</span>
+          </div>
         </div>
       </div>
 
@@ -513,10 +985,15 @@
 
   <script>
     // ──────────────────────────────────────────────────────────
-    // CONFIG — replace with your actual Supabase credentials
+    // CONFIG
     // ──────────────────────────────────────────────────────────
     const SUPABASE_URL      = "https://bysrzzwcipgeeuntfkit.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_UrM7qtGcB_vkHuoF5BlnJg_4R8WfPY2";
+
+    const STORAGE_KEY_CATEGORY = "newspulse_preferred_category";
+    const STORAGE_KEY_PROFILE  = "newspulse_user_profile";
+    
+    const VALID_CATEGORIES = ["all", "technology", "national", "sports", "jobs", "crime"];
 
     // ──────────────────────────────────────────────────────────
     // INIT SUPABASE
@@ -525,9 +1002,206 @@
     const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // ──────────────────────────────────────────────────────────
-    // STATE
+    // GLOBAL STATE
     // ──────────────────────────────────────────────────────────
     let activeCategory = "all";
+    let realtimeChannel = null;
+    let userProfile = null; // { age, categories: [] }
+
+    // ──────────────────────────────────────────────────────────
+    // ONBOARDING LOGIC
+    // ──────────────────────────────────────────────────────────
+    function hasUserProfile() {
+      try {
+        return localStorage.getItem(STORAGE_KEY_PROFILE) !== null;
+      } catch {
+        return false;
+      }
+    }
+
+    function loadUserProfile() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY_PROFILE);
+        if (!raw) return null;
+        const profile = JSON.parse(raw);
+        if (profile && Array.isArray(profile.categories) && profile.age) {
+          return profile;
+        }
+        return null;
+      } catch {
+        return null;
+      }
+    }
+
+    function saveUserProfile(profile) {
+      try {
+        localStorage.setItem(STORAGE_KEY_PROFILE, JSON.stringify(profile));
+        console.log("[Onboarding] Profile saved:", profile);
+      } catch (error) {
+        console.warn("[Onboarding] Could not save profile:", error.message);
+      }
+    }
+
+    function showOnboarding() {
+      document.getElementById("onboardingOverlay").classList.remove("hidden");
+      goToStep(1);
+    }
+
+    function hideOnboarding() {
+      const overlay = document.getElementById("onboardingOverlay");
+      overlay.classList.add("hidden");
+      updateProfileBadge();
+    }
+
+    function goToStep(stepNumber) {
+      // Update steps
+      document.querySelectorAll(".onboarding-step").forEach(s => s.classList.remove("active"));
+      document.getElementById(`step${stepNumber}`).classList.add("active");
+
+      // Update step indicators
+      document.querySelectorAll(".step-dot").forEach((dot, i) => {
+        dot.classList.remove("active", "completed");
+        if (i + 1 === stepNumber) dot.classList.add("active");
+        if (i + 1 < stepNumber) dot.classList.add("completed");
+      });
+
+      // Hide error messages
+      document.querySelectorAll(".error-message").forEach(el => el.classList.remove("show"));
+    }
+
+    function completeOnboarding() {
+      const ageInput = document.getElementById("ageInput");
+      const ageError = document.getElementById("ageError");
+      const categoryError = document.getElementById("categoryError");
+      
+      // Validate age
+      const age = parseInt(ageInput.value);
+      if (!age || age < 10 || age > 100) {
+        ageError.classList.add("show");
+        ageInput.focus();
+        return;
+      }
+      ageError.classList.remove("show");
+
+      // Validate categories
+      const checkedCategories = [];
+      document.querySelectorAll("#categoryGrid input[type='checkbox']:checked").forEach(cb => {
+        checkedCategories.push(cb.value);
+      });
+
+      if (checkedCategories.length === 0) {
+        categoryError.classList.add("show");
+        return;
+      }
+      categoryError.classList.remove("show");
+
+      // Save user profile
+      userProfile = {
+        age: age,
+        categories: checkedCategories
+      };
+      saveUserProfile(userProfile);
+
+      // Set active category to the first preferred category
+      const preferredCategory = userProfile.categories[0];
+      activeCategory = preferredCategory;
+
+      // Save category preference
+      saveCategoryPreference(preferredCategory);
+
+      // Update UI
+      updateActiveButton(preferredCategory);
+      hideOnboarding();
+
+      // Fetch filtered news
+      fetchArticles(preferredCategory);
+
+      // Setup realtime
+      setupRealtime();
+
+      console.log("[Onboarding] Complete. Profile:", userProfile);
+    }
+
+    function updateProfileBadge() {
+      const badge = document.getElementById("profileBadge");
+      const avatar = document.getElementById("profileAvatar");
+      const info = document.getElementById("profileInfo");
+
+      if (userProfile) {
+        badge.classList.remove("hidden");
+        avatar.textContent = userProfile.age.toString().charAt(0) || "N";
+        info.textContent = `বয়স ${userProfile.age} · ${userProfile.categories.length} ক্যাটাগরি`;
+        
+        // Re-onboard on click
+        badge.onclick = () => {
+          showOnboarding();
+        };
+      }
+    }
+
+    // Category checkbox toggle
+    document.getElementById("categoryGrid").addEventListener("click", (e) => {
+      const checkbox = e.target.closest(".category-checkbox");
+      if (!checkbox) return;
+
+      const input = checkbox.querySelector("input[type='checkbox']");
+      input.checked = !input.checked;
+      
+      if (input.checked) {
+        checkbox.classList.add("selected");
+      } else {
+        checkbox.classList.remove("selected");
+      }
+
+      // Hide category error when at least one selected
+      const anyChecked = document.querySelectorAll("#categoryGrid input[type='checkbox']:checked").length > 0;
+      if (anyChecked) {
+        document.getElementById("categoryError").classList.remove("show");
+      }
+    });
+
+    // ──────────────────────────────────────────────────────────
+    // CATEGORY PREFERENCE SYSTEM
+    // ──────────────────────────────────────────────────────────
+    function saveCategoryPreference(category) {
+      try {
+        localStorage.setItem(STORAGE_KEY_CATEGORY, category);
+      } catch (error) {
+        console.warn("[Preference] Could not save category:", error.message);
+      }
+    }
+
+    function getCategoryPreference() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY_CATEGORY);
+        if (saved && VALID_CATEGORIES.includes(saved)) {
+          return saved;
+        }
+      } catch (error) {
+        console.warn("[Preference] Could not read category:", error.message);
+      }
+      return "all";
+    }
+
+    function updateCategory(category) {
+      if (!VALID_CATEGORIES.includes(category)) return;
+      if (category === activeCategory) return;
+
+      activeCategory = category;
+      saveCategoryPreference(category);
+      updateActiveButton(category);
+      setupRealtime();
+      fetchArticles(category);
+    }
+
+    function updateActiveButton(category) {
+      document.querySelectorAll(".tab-btn").forEach((btn) => {
+        btn.classList.remove("active");
+        if (btn.dataset.category === category) {
+          btn.classList.add("active");
+        }
+      });
+    }
 
     // ──────────────────────────────────────────────────────────
     // HELPERS
@@ -602,39 +1276,34 @@
       `).join("");
     }
 
-   function renderCard(article, index) {
-  // ১. সামারি দেখানোর লজিক আপডেট: article.summary এর বদলে article.bengaliSummaries ব্যবহার কর
-  const bullets = (article.bengaliSummaries || []).map((b, i) => `
-    <li class="bullet-item">
-      <span class="bullet-arrow">▸</span>
-      <span>${escapeHtml(b)}</span>
-    </li>
-  `).join("");
+    function renderCard(article, index) {
+      const bullets = (article.bengaliSummaries || []).map((b) => `
+        <li class="bullet-item">
+          <span class="bullet-arrow">▸</span>
+          <span>${escapeHtml(b)}</span>
+        </li>
+      `).join("");
 
-  const deadlineHtml = (article.category === "jobs" && article.deadline)
-    ? `<span class="deadline-label">শেষ: ${formatDeadline(article.deadline)}</span>`
-    : `<span class="source-label">সূত্র: <span class="source-name">${escapeHtml(article.source_name || "অজানা")}</span></span>`;
+      const deadlineHtml = (article.category === "jobs" && article.deadline)
+        ? `<span class="deadline-label">শেষ: ${formatDeadline(article.deadline)}</span>`
+        : `<span class="source-label">সূত্র: <span class="source-name">${escapeHtml(article.source_name || "অজানা")}</span></span>`;
 
-  return `
-    <article class="card" style="animation-delay:${index * 55}ms" role="article">
-      <div class="card-meta">
-        <span class="cat-badge ${catClass(article.category)}">${catLabel(article.category)}</span>
-        <time class="time-ago">${timeAgo(article.created_at)}</time>
-      </div>
-
-      <!-- ২. টাইটেল দেখানোর লজিক আপডেট: article.title এর বদলে article.bengaliTitle ব্যবহার কর -->
-      <h2 class="card-title">${escapeHtml(article.bengaliTitle)}</h2>
-
-      <ul class="bullet-list">${bullets}</ul>
-
-      <div class="card-footer">
-        ${deadlineHtml}
-        <a href="${escapeHtml(article.sourceUrl)}" target="_blank" rel="noopener noreferrer"
-           class="read-link" aria-label="মূল সংবাদ পড়ুন">পড়ুন →</a>
-      </div>
-    </article>
-  `;
-}
+      return `
+        <article class="card" style="animation-delay:${index * 55}ms" role="article">
+          <div class="card-meta">
+            <span class="cat-badge ${catClass(article.category)}">${catLabel(article.category)}</span>
+            <time class="time-ago">${timeAgo(article.created_at)}</time>
+          </div>
+          <h2 class="card-title">${escapeHtml(article.bengaliTitle)}</h2>
+          <ul class="bullet-list">${bullets}</ul>
+          <div class="card-footer">
+            ${deadlineHtml}
+            <a href="${escapeHtml(article.sourceUrl)}" target="_blank" rel="noopener noreferrer"
+               class="read-link" aria-label="মূল সংবাদ পড়ুন">পড়ুন →</a>
+          </div>
+        </article>
+      `;
+    }
 
     function renderEmpty(category) {
       const msg = category === "all"
@@ -650,82 +1319,118 @@
     }
 
     // ──────────────────────────────────────────────────────────
-    // FETCH FROM SUPABASE
+    // FETCH ARTICLES WITH CATEGORY FILTERING
     // ──────────────────────────────────────────────────────────
     async function fetchArticles(category) {
       const grid  = document.getElementById("newsGrid");
       const count = document.getElementById("resultCount");
 
-      // Show skeletons while loading
       grid.innerHTML = renderSkeletons(6);
       count.textContent = "";
 
-      let query = db
-        .from("news_feed")
-        .select("*", { count: "exact" })
-        .order("created_at", { ascending: false })
-        .limit(50);
+      try {
+        let query = db
+          .from("news_feed")
+          .select("*", { count: "exact" })
+          .order("created_at", { ascending: false })
+          .limit(50);
 
-      if (category !== "all") {
-        query = query.eq("category", category);
-      }
+        if (category !== "all") {
+          query = query.eq("category", category);
+        }
 
-      const { data, error, count: total } = await query;
+        const { data, error, count: total } = await query;
 
-      if (error) {
-        console.error("Supabase error:", error.message);
+        if (error) {
+          console.error("Supabase error:", error.message);
+          grid.innerHTML = renderEmpty(category);
+          count.textContent = "ডেটা লোড করতে সমস্যা হয়েছে";
+          return;
+        }
+
+        if (category === "all") {
+          count.textContent = `${total || 0} টি সংবাদ পাওয়া গেছে (সকল বিভাগ)`;
+        } else {
+          count.textContent = `${total || 0} টি সংবাদ পাওয়া গেছে (${catLabel(category)} বিভাগ)`;
+        }
+
+        if (!data || data.length === 0) {
+          grid.innerHTML = renderEmpty(category);
+          return;
+        }
+
+        let filteredData = data;
+        if (category !== "all") {
+          filteredData = data.filter(article => article.category === category);
+        }
+
+        grid.innerHTML = filteredData.map((article, i) => renderCard(article, i)).join("");
+      } catch (err) {
+        console.error("[Fetch] Unexpected error:", err);
         grid.innerHTML = renderEmpty(category);
-        return;
+        count.textContent = "ডেটা লোড করতে সমস্যা হয়েছে";
       }
-
-      count.textContent = `${total || 0} টি সংবাদ পাওয়া গেছে`;
-
-      if (!data || data.length === 0) {
-        grid.innerHTML = renderEmpty(category);
-        return;
-      }
-
-      grid.innerHTML = data.map((article, i) => renderCard(article, i)).join("");
     }
 
     // ──────────────────────────────────────────────────────────
     // REALTIME SUBSCRIPTION
     // ──────────────────────────────────────────────────────────
     function setupRealtime() {
-      db.channel("newspulse_live")
+      if (realtimeChannel) {
+        db.removeChannel(realtimeChannel);
+      }
+
+      realtimeChannel = db.channel("newspulse_live")
         .on("postgres_changes", {
           event: "INSERT",
           schema: "public",
           table: "news_feed",
-        }, () => {
-          fetchArticles(activeCategory);
+        }, (payload) => {
+          if (activeCategory === "all" || payload.new.category === activeCategory) {
+            fetchArticles(activeCategory);
+          }
         })
         .subscribe();
     }
 
     // ──────────────────────────────────────────────────────────
-    // CATEGORY TABS
+    // INITIALIZATION
+    // ──────────────────────────────────────────────────────────
+    function initializeApp() {
+      // Load user profile
+      userProfile = loadUserProfile();
+
+      if (!userProfile) {
+        // First-time user: show onboarding
+        showOnboarding();
+        updateActiveButton("all");
+      } else {
+        // Returning user: load preferences
+        const savedCategory = getCategoryPreference();
+        activeCategory = savedCategory;
+        updateActiveButton(savedCategory);
+        fetchArticles(savedCategory);
+        setupRealtime();
+        updateProfileBadge();
+        hideOnboarding();
+      }
+
+      console.log("[NewsPulse] Initialized. Profile:", userProfile);
+    }
+
+    // ──────────────────────────────────────────────────────────
+    // CATEGORY TABS EVENT LISTENER
     // ──────────────────────────────────────────────────────────
     document.getElementById("categoryNav").addEventListener("click", (e) => {
       const btn = e.target.closest(".tab-btn");
       if (!btn) return;
-
-      const category = btn.dataset.category;
-      if (category === activeCategory) return;
-
-      // Update active state
-      document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
-
-      activeCategory = category;
-      fetchArticles(activeCategory);
+      updateCategory(btn.dataset.category);
     });
 
     // ──────────────────────────────────────────────────────────
     // BOOT
     // ──────────────────────────────────────────────────────────
-    fetchArticles("all");
-    setupRealtime();
+    initializeApp();
   </script>
 </body>
 </html>
