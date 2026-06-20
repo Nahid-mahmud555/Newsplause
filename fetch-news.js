@@ -236,7 +236,7 @@ async function urlExists(url) {
         const { data, error } = await supabase
             .from('news_feed')
             .select('id')
-            .eq('sourceUrl', url) // 🎉 ঠিক করা হয়েছে: source_url থেকে sourceUrl
+            .eq('sourceUrl', url)
             .single();
         
         if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
@@ -348,13 +348,13 @@ async function processSource(source) {
                     await new Promise(resolve => setTimeout(resolve, 500));
                 }
                 
-                // Prepare data for insertion (তোর ডাটাবেজের কলাম স্ট্রাকচার অনুযায়ী ম্যাপ করা হয়েছে)
+                // Prepare data for insertion (তোর ডাটাবেজের আসল কলাম স্ট্রাকচার অনুযায়ী ম্যাপ করা হয়েছে)
                 const newsData = {
-                    bengaliTitle: bengaliTitle, // 🎉 ঠিক করা হয়েছে: title থেকে bengaliTitle
-                    bengaliSummaries: bengaliSummaries, // 🎉 ঠিক করা হয়েছে: summary থেকে bengaliSummaries
+                    bengaliTitle: bengaliTitle, 
+                    bengaliSummaries: bengaliSummaries, 
                     category: source.category,
-                    sourceUrl: sourceUrl, // 🎉 ঠিক করা হয়েছে: source_url থেকে sourceUrl
-                    source_name: source.name,
+                    sourceUrl: sourceUrl, 
+                    sourceName: source.name, // 🎉 ঠিক করা হয়েছে: source_name থেকে sourceName
                     deadline: source.category === 'jobs' ? 
                         new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : 
                         null
