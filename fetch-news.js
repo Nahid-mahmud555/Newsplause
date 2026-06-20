@@ -348,13 +348,13 @@ async function processSource(source) {
                     await new Promise(resolve => setTimeout(resolve, 500));
                 }
                 
-                // Prepare data for insertion (তোর ডাটাবেজের আসল কলাম স্ট্রাকচার অনুযায়ী ম্যাপ করা হয়েছে)
+                // Prepare data for insertion (ডাটাবেজের প্রকৃত স্কিমা অনুযায়ী ম্যাপড)
                 const newsData = {
                     bengaliTitle: bengaliTitle, 
                     bengaliSummaries: bengaliSummaries, 
                     category: source.category,
                     sourceUrl: sourceUrl, 
-                    sourceName: source.name, // 🎉 ঠিক করা হয়েছে: source_name থেকে sourceName
+                    source_name: source.name, // 🛠️ ফিক্সড: আপনার ডাটাবেজের আসল কলাম source_name ব্যবহার করা হয়েছে
                     deadline: source.category === 'jobs' ? 
                         new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : 
                         null
