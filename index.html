@@ -1213,7 +1213,7 @@
       applyLanguage(currentLang);
     }
 
-    function completeOnboarding() {
+   function completeOnboarding() {
       const ageInput = document.getElementById("ageInput");
       const ageError = document.getElementById("ageError");
       const categoryError = document.getElementById("categoryError");
@@ -1236,10 +1236,44 @@
       }
       categoryError.classList.remove("show");
 
+      // ১. অবজেক্ট তৈরি
       userProfile = {
         age: age,
         categories: checkedCategories
       };
+
+      // 🔥 ২. সুপাবেস ডাটাবেজে ডাটা পাঠানো (The Missing Link)
+      try {
+        // তোর বাটনে একটা লোডিং ইফেক্ট দেখানোর জন্য টেক্সট চেঞ্জ করতে পারিস
+        const doneBtn = document.querySelector("button[onclick='completeOnboarding()']");
+        const originalText = doneBtn.innerHTML;
+        doneBtn.innerHTML = currentLang === "bn" ? "সংরক্ষণ হচ্ছে..." : "Saving...";
+        doneBtn.disabled = true;
+
+        const { data, error } = await db
+          .from('user_preferences') // তোর সুপাবেস টেবিলের নাম যদি অন্য হয়, সেটা এখানে দিবি
+          .insert([
+            { 
+              age: userProfile.age, 
+              categories: userProfile.categories 
+            }
+          ]);
+
+        if (error) {
+          console.error("[Supabase Error] ডাটাবেজে সেভ হয়নি:", error.message);
+          // ডাটাবেজে ফেইল করলেও লোকাল অ্যাপ যেন আটকে না থাকে, তাই আমরা ব্যাকআপ হিসেবে এগিয়ে যাব
+        } else {
+          console.log("[Supabase Success] ডাটা সফলভাবে ডাটাবেজে গেছে:", data);
+        }
+      } catch (err) {
+        console.error("[Catch Error] নেটওয়ার্ক বা অন্য সমস্যা:", err);
+      } finally {
+        // বাটন ঠিক করা
+        const doneBtn = document.querySelector("button[onclick='completeOnboarding()']");
+        if (doneBtn) doneBtn.disabled = false;
+      }
+
+      // ৩. লোকাল স্টোরেজে সেভ এবং UI আপডেট (তোর আগের কোড)
       saveUserProfile(userProfile);
 
       const preferredCategory = userProfile.categories[0];
@@ -1253,7 +1287,6 @@
       fetchArticles(preferredCategory);
       setupRealtime();
     }
-
     function updateProfileBadge() {
       const badge = document.getElementById("profileBadge");
       const avatar = document.getElementById("profileAvatar");
