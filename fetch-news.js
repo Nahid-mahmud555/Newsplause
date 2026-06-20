@@ -116,6 +116,7 @@ function cleanText(text) {
         .replace(/&gt;/g, '>')
         .replace(/&quot;/g, '"')
         .replace(/&#039;/g, "'")
+        .replace(/&rarr;/g, '→')
         .replace(/&rsquo;/g, "'")
         .replace(/&lsquo;/g, "'")
         .replace(/&rdquo;/g, '"')
@@ -235,7 +236,7 @@ async function urlExists(url) {
         const { data, error } = await supabase
             .from('news_feed')
             .select('id')
-            .eq('source_url', url)
+            .eq('sourceUrl', url) // 🎉 ঠিক করা হয়েছে: source_url থেকে sourceUrl
             .single();
         
         if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
@@ -262,7 +263,7 @@ async function insertNews(newsData) {
         
         if (error) {
             if (error.code === '23505') { // Unique violation
-                log(`Duplicate entry skipped: ${newsData.source_url}`, 'WARN');
+                log(`Duplicate entry skipped: ${newsData.sourceUrl}`, 'WARN');
                 return { success: false, reason: 'duplicate' };
             }
             
@@ -347,12 +348,13 @@ async function processSource(source) {
                     await new Promise(resolve => setTimeout(resolve, 500));
                 }
                 
-                // Prepare data for insertion
+                // Prepare data for insertion (তোর ডাটাবেজের কলাম স্ট্রাকচার অনুযায়ী ম্যাপ করা হয়েছে)
                 const newsData = {
-                    title: bengaliTitle,
-                    summary: bengaliSummaries,
+                    bengaliTitle: bengaliTitle, // 🎉 ঠিক করা হয়েছে: title থেকে bengaliTitle
+                    bengaliSummaries: bengaliSummaries, // 🎉 ঠিক করা হয়েছে: summary থেকে bengaliSummaries
                     category: source.category,
-                    source_url: sourceUrl,
+                    sourceUrl: sourceUrl, // 🎉 ঠিক করা হয়েছে: source_url থেকে sourceUrl
+                    source_name: source.name,
                     deadline: source.category === 'jobs' ? 
                         new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : 
                         null
