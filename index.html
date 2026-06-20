@@ -862,7 +862,7 @@
           </li>
         </ul>
 
-        <button class="btn btn-primary" onclick="goToStep(2)" data-bn="শুরু করুন →" data-en="Get Started →">শুরু করুন →</button>
+        <button class="btn btn-primary" id="startBtn" data-bn="শুরু করুন →" data-en="Get Started →">শুরু করুন →</button>
       </div>
 
       <!-- Step 2: Input Collection -->
@@ -913,8 +913,8 @@
         </div>
 
         <div class="btn-row">
-          <button class="btn btn-secondary" onclick="goToStep(1)" data-bn="← পিছনে" data-en="← Back">← পিছনে</button>
-          <button class="btn btn-primary" onclick="completeOnboarding()" data-bn="সম্পন্ন ✓" data-en="Done ✓">সম্পন্ন ✓</button>
+          <button class="btn btn-secondary" id="backBtn" data-bn="← পিছনে" data-en="← Back">← পিছনে</button>
+          <button class="btn btn-primary" id="doneBtn" data-bn="সম্পন্ন ✓" data-en="Done ✓">সম্পন্ন ✓</button>
         </div>
       </div>
 
@@ -1047,7 +1047,7 @@
     let activeCategory = "all";
     let realtimeChannel = null;
     let userProfile = null;
-    let currentLang = "bn"; // bn | en
+    let currentLang = "bn";
 
     // ──────────────────────────────────────────────────────────
     // LANGUAGE SYSTEM
@@ -1055,13 +1055,10 @@
     function applyLanguage(lang) {
       currentLang = lang;
       
-      // Save preference
       try { localStorage.setItem(STORAGE_KEY_LANG, lang); } catch(e) {}
       
-      // Update body class for font family
       document.body.classList.toggle("lang-en", lang === "en");
       
-      // Update all data-bn/data-en elements (only for UI elements, NOT for news content)
       document.querySelectorAll("[data-bn][data-en]").forEach(el => {
         const text = lang === "bn" ? el.getAttribute("data-bn") : el.getAttribute("data-en");
         if (text !== null && text !== undefined) {
@@ -1069,18 +1066,14 @@
         }
       });
       
-      // Update lang toggle buttons
       document.querySelectorAll("#langToggle .lang-option").forEach(opt => {
         opt.classList.toggle("active", opt.dataset.lang === lang);
       });
       
-      // Update HTML lang attribute
       document.documentElement.lang = lang === "bn" ? "bn" : "en";
       
-      // Update category labels in nav
       updateCategoryLabels(lang);
       
-      // Update placeholder
       const ageInput = document.getElementById("ageInput");
       if (ageInput) {
         ageInput.placeholder = lang === "bn" ? "উদাহরণ: 25" : "Example: 25";
@@ -1123,7 +1116,6 @@
       const lang = option.dataset.lang;
       if (lang === currentLang) return;
       applyLanguage(lang);
-      // 🔥 RE-RENDER cards with new language
       fetchArticles(activeCategory);
     });
 
@@ -1209,11 +1201,10 @@
 
       document.querySelectorAll(".error-message").forEach(el => el.classList.remove("show"));
       
-      // Re-apply language after step change
       applyLanguage(currentLang);
     }
 
-   function completeOnboarding() {
+    async function completeOnboarding() {
       const ageInput = document.getElementById("ageInput");
       const ageError = document.getElementById("ageError");
       const categoryError = document.getElementById("categoryError");
@@ -1236,22 +1227,19 @@
       }
       categoryError.classList.remove("show");
 
-      // ১. অবজেক্ট তৈরি
       userProfile = {
         age: age,
         categories: checkedCategories
       };
 
-      // 🔥 ২. সুপাবেস ডাটাবেজে ডাটা পাঠানো (The Missing Link)
-      try {
-        // তোর বাটনে একটা লোডিং ইফেক্ট দেখানোর জন্য টেক্সট চেঞ্জ করতে পারিস
-        const doneBtn = document.querySelector("button[onclick='completeOnboarding()']");
-        const originalText = doneBtn.innerHTML;
-        doneBtn.innerHTML = currentLang === "bn" ? "সংরক্ষণ হচ্ছে..." : "Saving...";
-        doneBtn.disabled = true;
+      const doneBtn = document.getElementById("doneBtn");
+      const originalText = doneBtn.innerHTML;
+      doneBtn.innerHTML = currentLang === "bn" ? "সংরক্ষণ হচ্ছে..." : "Saving...";
+      doneBtn.disabled = true;
 
+      try {
         const { data, error } = await db
-          .from('user_preferences') // তোর সুপাবেস টেবিলের নাম যদি অন্য হয়, সেটা এখানে দিবি
+          .from('user_preferences')
           .insert([
             { 
               age: userProfile.age, 
@@ -1261,19 +1249,16 @@
 
         if (error) {
           console.error("[Supabase Error] ডাটাবেজে সেভ হয়নি:", error.message);
-          // ডাটাবেজে ফেইল করলেও লোকাল অ্যাপ যেন আটকে না থাকে, তাই আমরা ব্যাকআপ হিসেবে এগিয়ে যাব
         } else {
           console.log("[Supabase Success] ডাটা সফলভাবে ডাটাবেজে গেছে:", data);
         }
       } catch (err) {
         console.error("[Catch Error] নেটওয়ার্ক বা অন্য সমস্যা:", err);
       } finally {
-        // বাটন ঠিক করা
-        const doneBtn = document.querySelector("button[onclick='completeOnboarding()']");
-        if (doneBtn) doneBtn.disabled = false;
+        doneBtn.disabled = false;
+        doneBtn.innerHTML = originalText;
       }
 
-      // ৩. লোকাল স্টোরেজে সেভ এবং UI আপডেট (তোর আগের কোড)
       saveUserProfile(userProfile);
 
       const preferredCategory = userProfile.categories[0];
@@ -1287,6 +1272,7 @@
       fetchArticles(preferredCategory);
       setupRealtime();
     }
+
     function updateProfileBadge() {
       const badge = document.getElementById("profileBadge");
       const avatar = document.getElementById("profileAvatar");
@@ -1303,7 +1289,6 @@
           info.textContent = `Age ${userProfile.age} · ${userProfile.categories.length} categories`;
         }
         
-        // ❌ NO CLICK HANDLER — profile is saved, no re-onboarding
         badge.onclick = null;
       }
     }
@@ -1449,18 +1434,12 @@
     }
 
     function renderCard(article, index) {
-      // 🔥 LANGUAGE-BASED CONTENT SELECTION
-      // বাংলা = ডিফল্ট bengaliTitle / bengaliSummaries
-      // ইংরেজি = englishTitle / englishSummaries (fallback to bengali if not available)
-      
       let title, summaries;
       
       if (currentLang === "en") {
-        // Try English first, fallback to Bengali
         title = article.englishTitle || article.bengaliTitle || "No Title";
         summaries = article.englishSummaries || article.bengaliSummaries || [];
       } else {
-        // Default: Bengali
         title = article.bengaliTitle || article.englishTitle || "কোনো শিরোনাম নেই";
         summaries = article.bengaliSummaries || article.englishSummaries || [];
       }
@@ -1586,8 +1565,25 @@
     }
 
     // ──────────────────────────────────────────────────────────
-    // NAV CLICK
+    // EVENT LISTENERS
     // ──────────────────────────────────────────────────────────
+    
+    // Start button (Step 1 → Step 2)
+    document.getElementById("startBtn").addEventListener("click", () => {
+      goToStep(2);
+    });
+
+    // Back button (Step 2 → Step 1)
+    document.getElementById("backBtn").addEventListener("click", () => {
+      goToStep(1);
+    });
+
+    // Done button (Complete onboarding)
+    document.getElementById("doneBtn").addEventListener("click", () => {
+      completeOnboarding();
+    });
+
+    // Category nav click
     document.getElementById("categoryNav").addEventListener("click", (e) => {
       const btn = e.target.closest(".tab-btn");
       if (!btn) return;
