@@ -6,10 +6,10 @@
   <title>NewsPulse — বাংলা সংবাদ</title>
   <meta name="description" content="বিশ্বের সেরা সংবাদ উৎস থেকে বাংলায় সংক্ষিপ্ত সংবাদ" />
 
-  <!-- Google Fonts: Hind Siliguri (Bengali) + Inter (UI) -->
+  <!-- Google Fonts: Noto Sans Bengali + Hind Siliguri + Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700;800&family=Hind+Siliguri:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
 
   <!-- Supabase JS (CDN) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -53,11 +53,13 @@
     html { scroll-behavior: smooth; }
 
     body {
-      font-family: "Hind Siliguri", sans-serif;
+      font-family: "Noto Sans Bengali", "Hind Siliguri", sans-serif;
       background: var(--bg-base);
       color: var(--text-primary);
       min-height: 100vh;
-      line-height: 1.6;
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
 
     /* Language: English override */
@@ -350,7 +352,7 @@
       font-weight: 500;
       cursor: pointer;
       border: none;
-      font-family: "Hind Siliguri", sans-serif;
+      font-family: "Noto Sans Bengali", "Hind Siliguri", sans-serif;
       transition: all 0.2s ease;
       width: 100%;
     }
@@ -520,7 +522,7 @@
       background: transparent;
       color: var(--text-muted);
       transition: all 0.2s ease;
-      font-family: "Hind Siliguri", sans-serif;
+      font-family: "Noto Sans Bengali", "Hind Siliguri", sans-serif;
       white-space: nowrap;
     }
 
@@ -653,14 +655,10 @@
 
     /* Card title */
     .card-title {
-      font-size: 15px;
+      font-size: 16px;
       font-weight: 600;
       color: var(--text-primary);
-      line-height: 1.5;
-      display: -webkit-box;
-      -webkit-line-clamp: 3;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
+      line-height: 1.6;
     }
 
     /* Bullet summary */
@@ -676,7 +674,7 @@
       gap: 10px;
       font-size: 13px;
       color: var(--text-secondary);
-      line-height: 1.6;
+      line-height: 1.7;
     }
 
     .bullet-arrow {
@@ -714,14 +712,27 @@
       font-weight: 500;
     }
 
-    .read-link {
-      font-family: "Inter", sans-serif;
-      font-size: 11px;
+    .read-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 14px;
+      background: var(--accent-dim);
+      border: 1px solid var(--accent);
+      border-radius: var(--radius-pill);
       color: var(--accent);
+      font-size: 12px;
+      font-weight: 500;
       text-decoration: none;
-      transition: color 0.15s;
+      transition: all 0.2s ease;
+      font-family: "Noto Sans Bengali", "Hind Siliguri", sans-serif;
     }
-    .read-link:hover { color: #a5b4fc; }
+
+    .read-btn:hover {
+      background: var(--accent);
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
 
     /* ═══════════════════════════════════════════════
        SKELETON LOADER
@@ -1467,7 +1478,7 @@
           <ul class="bullet-list">${bullets}</ul>
           <div class="card-footer">
             ${deadlineHtml}
-            <a href="${escapeHtml(article.sourceUrl)}" target="_blank" rel="noopener noreferrer" class="read-link">${readText}</a>
+            <a href="${escapeHtml(article.source_url || '#')}" target="_blank" rel="noopener noreferrer" class="read-btn">${readText}</a>
           </div>
         </article>
       `;
