@@ -1,6 +1,6 @@
 import Parser from 'rss-parser';
 import { createClient } from '@supabase/supabase-js';
-import { translate } from '@vitalets/google-translate-api';
+import translate from '@vitalets/google-translate-api';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
@@ -40,6 +40,145 @@ const RSS_SOURCES = [
         category: 'national',
         enabled: true
     },
+    
+    {
+    name: 'Prothom Alo Bangla',
+    url: 'https://www.prothomalo.com/feed/',
+    category: 'national',
+    enabled: true
+},
+
+// 🏛️ ২. যুগান্তর (Jugantor)
+{
+    name: 'Jugantor National',
+    url: 'https://www.jugantor.com/feed/national',
+    category: 'national',
+    enabled: true
+},
+
+{
+    name: 'Jugantor World',
+    url: 'https://www.jugantor.com/feed/international',
+    category: 'national', // ইন্টারন্যাশনাল নিউজও তুই আপাতত ন্যাশনালে দেখাতে পারিস
+    enabled: true
+},
+
+// 🌍 ৩. বিডিপ্রতিদিন (Bangladesh Pratidin)
+{
+    name: 'Bangladesh Pratidin Main',
+    url: 'https://bdpratidin.net/rss/category/bangladesh',
+    category: 'national',
+    enabled: true
+},
+{
+    name: 'Bangladesh Pratidin World',
+    url: 'https://bdpratidin.net/rss/category/international',
+    category: 'national',
+    enabled: true
+},
+{
+    name: 'Bangladesh Pratidin Sports',
+    url: 'https://bdpratidin.net/rss/category/sports',
+    category: 'sports',
+    enabled: true
+},
+
+// ⚡ ৪. জাগোনিউজ২৪ (JagoNews24)
+{
+    name: 'JagoNews24 Main',
+    url: 'https://www.jagonews24.com/rss/rss.xml',
+    category: 'national',
+    enabled: true
+},
+{
+    name: 'JagoNews24 National',
+    url: 'https://www.jagonews24.com/rss/category/1',
+    category: 'national',
+    enabled: true
+},
+{
+    name: 'JagoNews24 World',
+    url: 'https://www.jagonews24.com/rss/category/3',
+    category: 'national',
+    enabled: true
+},
+{
+    name: 'JagoNews24 Sports',
+    url: 'https://www.jagonews24.com/rss/category/5',
+    category: 'sports',
+    enabled: true
+},
+
+// 💻 ৫. বাংলানিউজ২৪ (Banglanews24)
+{
+    name: 'Banglanews24 Tech',
+    url: 'https://www.banglanews24.com/rss/category/9',
+    category: 'technology',
+    enabled: true
+},
+{
+    name: 'Banglanews24 National',
+    url: 'https://www.banglanews24.com/rss/category/1',
+    category: 'national',
+    enabled: true
+},
+{
+    name: 'Banglanews24 Business',
+    url: 'https://www.banglanews24.com/rss/category/4',
+    category: 'national',
+    enabled: true
+},
+// 💼 ৬. সরকারি ও বেসরকারি চাকরি (Jobs & BCS Prep)
+{
+    name: 'BDJobs Official',
+    url: 'https://corporate.bdjobs.com/rss/bdjobs.xml', // বিডিজবসের মেইন আরএসএস
+    category: 'jobs',
+    enabled: true
+},
+{
+    name: 'Jugantor Jobs',
+    url: 'https://www.jugantor.com/feed/jobs', // যুগান্তরের চাকুরির খবর ক্যাটাগরি
+    category: 'jobs',
+    enabled: true
+},
+{
+    name: 'JagoNews24 Jobs',
+    url: 'https://www.jagonews24.com/rss/category/10', // জাগোনিউজের চাকরির খবর (ক্যাটাগরি ১০)
+    category: 'jobs',
+    enabled: true
+},
+{
+    name: 'Banglanews24 Jobs',
+    url: 'https://www.banglanews24.com/rss/category/6', // বাংলানিউজের ক্যারিয়ার ও কর্মসংস্থান (ক্যাটাগরি ৬)
+    category: 'jobs',
+    enabled: true
+},
+// 📚 ৭. কারেন্ট অ্যাফেয়ার্স ও বিসিএস প্রস্তুতি (Current Affairs & BCS GK)
+{
+    name: 'Prothom Alo Padhashona',
+    url: 'https://www.prothomalo.com/feed/education/admission', // প্রথম আলোর পড়াশোনা ও ভর্তি প্রস্তুতি
+    category: 'national', // অথবা 'affairs'
+    enabled: true
+},
+{
+    name: 'Jugantor Tutorial',
+    url: 'https://www.jugantor.com/feed/tutorial', // যুগান্তরের টিউটোরিয়াল (বিসিএস ও চাকরির সাধারণ জ্ঞান আসে এখানে)
+    category: 'national', 
+    enabled: true
+},
+{
+    name: 'JagoNews24 Education',
+    url: 'https://www.jagonews24.com/rss/category/34', // জাগোনিউজের পড়াশোনা ক্যাটাগরি
+    category: 'national',
+    enabled: true
+},
+{
+    name: 'Banglanews24 Features',
+    url: 'https://www.banglanews24.com/rss/category/11', // বাংলানিউজের ইসলাম/ইতিহাস/ঐতিহ্য (GK এর জন্য দারুণ)
+    category: 'national',
+    enabled: true
+},
+
     {
         name: 'The Daily Star',
         url: 'https://www.thedailystar.net/frontpage/rss.xml',
@@ -143,7 +282,9 @@ function createEnglishSummary(content) {
         .filter(s => s.length > 20 && s.length < 300);
     
     if (sentences.length === 0) {
-        return [cleanContent.substring(0, 150)];
+        // যদি কোন ভ্যালিড সেন্টেন্স না থাকে, পুরো কন্টেন্ট থেকে কিছু নিই
+        const fallbackText = cleanContent.substring(0, 200).trim();
+        return fallbackText ? [fallbackText] : ['No content available'];
     }
     
     // Smart selection strategy
@@ -173,26 +314,34 @@ function createEnglishSummary(content) {
         }
     }
     
-    // Ensure exactly 3 bullet points
-    while (selected.length < 3) {
-        const remaining = sentences.find(s => !selected.includes(s));
-        if (remaining) {
-            selected.push(remaining);
-        } else {
-            selected.push('...');
+    // 🛠️ ফিক্স: "..." বা খালি স্ট্রিং বাদ দিয়ে ফিল্টার
+    const validSentences = selected.filter(s => {
+        const trimmed = s.trim();
+        return trimmed !== "" && !/^[.\s\-…]+$/.test(trimmed);
+    });
+    
+    // যদি সব ফিল্টার হয়ে যায়, প্রথম ভ্যালিড সেন্টেন্স নিই
+    if (validSentences.length === 0) {
+        const firstValid = sentences.find(s => {
+            const trimmed = s.trim();
+            return trimmed !== "" && !/^[.\s\-…]+$/.test(trimmed);
+        });
+        if (firstValid) {
+            validSentences.push(firstValid);
         }
     }
     
     // Trim to maximum length
-    return selected.slice(0, 3).map(s => s.substring(0, 200).trim());
+    return validSentences.slice(0, 3).map(s => s.substring(0, 200).trim());
 }
 
 // ============================================
 // TRANSLATE TO BENGALI
 // ============================================
 async function translateToBengali(text) {
-    if (!text || text.trim().length === 0) {
-        return 'অনুবাদ উপলব্ধ নয়';
+    // 🛠️ ফিক্স: খালি বা ডট ডট টেক্সট ট্রান্সলেট না করা
+    if (!text || text.trim().length === 0 || /^[.\s\-…]+$/.test(text.trim())) {
+        return text; // Return original text instead of error message
     }
     
     let retries = 3;
@@ -204,7 +353,7 @@ async function translateToBengali(text) {
                 forceTo: true
             });
             
-            if (result && result.text) {
+            if (result && result.text && result.text.trim().length > 0) {
                 return result.text;
             }
             
@@ -215,7 +364,7 @@ async function translateToBengali(text) {
             
             if (retries === 0) {
                 log(`Translation failed after all retries: ${error.message}`, 'ERROR');
-                return text; // Return original text as fallback
+                return text; // 🛠️ ফিক্স: Return original text as fallback, not error message
             }
             
             // Exponential backoff
@@ -236,7 +385,7 @@ async function urlExists(url) {
         const { data, error } = await supabase
             .from('news_feed')
             .select('id')
-            .eq('sourceUrl', url)
+            .eq('source_url', url) // 🛠️ ফিক্সড: ডাটাবেজের সঠিক কলাম নাম
             .single();
         
         if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
@@ -263,7 +412,7 @@ async function insertNews(newsData) {
         
         if (error) {
             if (error.code === '23505') { // Unique violation
-                log(`Duplicate entry skipped: ${newsData.sourceUrl}`, 'WARN');
+                log(`Duplicate entry skipped: ${newsData.source_url}`, 'WARN');
                 return { success: false, reason: 'duplicate' };
             }
             
@@ -277,6 +426,25 @@ async function insertNews(newsData) {
         log(`Exception inserting news: ${error.message}`, 'ERROR');
         return { success: false, reason: 'exception' };
     }
+}
+
+// ============================================
+// VALIDATE SUMMARIES (Remove empty/dot entries)
+// ============================================
+function validateSummaries(summaries) {
+    if (!summaries || !Array.isArray(summaries)) return [];
+    
+    return summaries.filter(s => {
+        if (!s) return false;
+        const trimmed = s.toString().trim();
+        // ফিল্টার আউট: খালি, শুধু ডট, শুধু স্পেস, "..." ইত্যাদি
+        return trimmed !== "" && 
+               trimmed !== "..." && 
+               trimmed !== ".." && 
+               trimmed !== "." && 
+               !/^[.\s\-…]+$/.test(trimmed) &&
+               trimmed !== "অনুবাদ উপলব্ধ নয়"; // এটি থাকলে ফ্রন্টএন্ড ফিল্টারে বাদ যাবে, তাই এখানেও ফিল্টার করছি
+    });
 }
 
 // ============================================
@@ -334,30 +502,61 @@ async function processSource(source) {
                 log(`   📝 [${i+1}/${itemsToProcess.length}] Creating summary: "${item.title?.substring(0, 50)}..."`);
                 const englishSummary = createEnglishSummary(content);
                 
+                // 🛠️ ইংলিশ সামারি থেকে ডট ডট ফিল্টার
+                const validEnglishSummary = validateSummaries(englishSummary);
+                
+                if (validEnglishSummary.length === 0) {
+                    log(`   ⚠️  No valid summary points after filtering, skipping`, 'WARN');
+                    skippedCount++;
+                    continue;
+                }
+                
+                // 🛠️ স্টোর করে রাখি ইংলিশ টাইটেল
+                const englishTitle = item.title || 'No Title';
+                
                 // Translate title
                 log(`   🔄 Translating title...`);
-                const bengaliTitle = await translateToBengali(item.title || 'No Title');
+                let bengaliTitle = await translateToBengali(englishTitle);
+                // 🛠️ ফিক্স: ব্যাকআপ - যদি অনুবাদ ফেইল করে, মূল ইংলিশ টাইটেলই রেখে দেব
+                if (bengaliTitle === 'অনুবাদ উপলব্ধ নয়' || !bengaliTitle || bengaliTitle.trim().length === 0) {
+                    bengaliTitle = englishTitle;
+                }
                 
                 // Translate each summary point
-                log(`   🔄 Translating ${englishSummary.length} summary points...`);
+                log(`   🔄 Translating ${validEnglishSummary.length} summary points...`);
                 const bengaliSummaries = [];
-                for (const point of englishSummary) {
-                    const translated = await translateToBengali(point);
+                for (const point of validEnglishSummary) {
+                    let translated = await translateToBengali(point);
+                    // 🛠️ ফিক্স: ব্যাকআপ - অনুবাদ ফেইল করলে ফাকা না রেখে ইংরেজি পয়েন্টটাই ঢুকিয়ে দেব
+                    if (translated === 'অনুবাদ উপলব্ধ নয়' || !translated || translated.trim().length === 0) {
+                        translated = point;
+                    }
                     bengaliSummaries.push(translated);
                     // Small delay between translations
                     await new Promise(resolve => setTimeout(resolve, 500));
                 }
                 
-                // Prepare data for insertion (ডাটাবেজের প্রকৃত স্কিমা অনুযায়ী ম্যাপড)
+                // 🛠️ বাংলা সামারি থেকেও ডট ডট ফিল্টার
+                const validBengaliSummaries = validateSummaries(bengaliSummaries);
+                
+                if (validBengaliSummaries.length === 0) {
+                    log(`   ⚠️  No valid Bengali summaries after filtering, skipping`, 'WARN');
+                    skippedCount++;
+                    continue;
+                }
+                
+                // 🛠️ ফিক্স: ফ্রন্টএন্ড স্কিমা (renderCard) ম্যাচ করার জন্য অবজেক্ট ম্যাপিং
                 const newsData = {
-                    bengaliTitle: bengaliTitle, 
-                    bengaliSummaries: bengaliSummaries, 
-                    category: source.category,
-                    sourceUrl: sourceUrl, 
-                    source_name: source.name, // 🛠️ ফিক্সড: আপনার ডাটাবেজের আসল কলাম source_name ব্যবহার করা হয়েছে
+                    bengaliTitle: bengaliTitle,                           // TEXT
+                    englishTitle: englishTitle,                           // TEXT
+                    bengaliSummaries: validBengaliSummaries,             // TEXT[]
+                    englishSummaries: validEnglishSummary,               // TEXT[]
+                    category: source.category,                            // TEXT
+                    source_url: sourceUrl,                                // TEXT, UNIQUE
+                    source_name: source.name,                             // TEXT
                     deadline: source.category === 'jobs' ? 
                         new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : 
-                        null
+                        null                                              // DATE
                 };
                 
                 // Insert into database
@@ -366,6 +565,7 @@ async function processSource(source) {
                 if (result.success) {
                     processedCount++;
                     log(`   ✅ [${i+1}/${itemsToProcess.length}] Inserted: "${bengaliTitle.substring(0, 50)}..."`);
+                    log(`   📋 Summary points: ${validBengaliSummaries.length}`);
                 } else if (result.reason === 'duplicate') {
                     skippedCount++;
                 } else {
