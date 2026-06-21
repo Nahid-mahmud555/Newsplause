@@ -1,6 +1,6 @@
 import Parser from 'rss-parser';
 import { createClient } from '@supabase/supabase-js';
-import pkg from '@vitalets/google-translate-api'; // 🛠️ প্যাকেজ ইমপোর্ট স্টাইল ফিক্স
+import pkg from '@vitalets/google-translate-api';
 const { translate } = pkg;
 import dotenv from 'dotenv';
 import fs from 'fs';
@@ -211,7 +211,7 @@ const RSS_SOURCES = [
         name: 'Al Jazeera English',
         url: 'https://www.aljazeera.com/xml/rss/all.xml',
         category: 'national',
-        enabled: false // Backup source, disabled by default
+        enabled: false
     }
 ];
 
@@ -226,11 +226,10 @@ function log(message, type = 'INFO') {
     
     console.log(logMessage);
     
-    // Also write to log file
     try {
         fs.appendFileSync(logFile, logMessage + '\n');
     } catch (error) {
-        // Silently fail if can't write to log file
+        // Silently fail
     }
 }
 
@@ -241,7 +240,7 @@ function cleanText(text) {
     if (!text) return '';
     
     return text
-        .replace(/<[^>]*>/g, '') // Remove HTML tags
+        .replace(/<[^>]*>/g, '')
         .replace(/&amp;/g, '&')
         .replace(/&lt;/g, '<')
         .replace(/&gt;/g, '>')
@@ -264,22 +263,18 @@ function cleanText(text) {
 function createEnglishSummary(content) {
     if (!content) return ['No content available'];
     
-    // Clean the content
     const cleanContent = cleanText(content);
     
-    // Remove very short strings and empty lines
     const sentences = cleanContent
         .split(/(?<=[.!?])\s+/)
         .map(s => s.trim())
         .filter(s => s.length > 20 && s.length < 300);
     
     if (sentences.length === 0) {
-        // যদি কোন ভ্যালিড সেন্টেন্স না থাকে, পুরো কন্টেন্ট থেকে কিছু নিই
         const fallbackText = cleanContent.substring(0, 200).trim();
         return fallbackText ? [fallbackText] : ['No content available'];
     }
     
-    // Smart selection strategy
     let selected = [];
     
     if (sentences.length === 1) {
@@ -289,30 +284,24 @@ function createEnglishSummary(content) {
     } else if (sentences.length === 3) {
         selected = sentences;
     } else {
-        // Choose: first sentence, a middle sentence, and last sentence
         const first = sentences[0];
         const middle = sentences[Math.floor(sentences.length / 2)];
         const last = sentences[sentences.length - 1];
         
         selected = [first, middle, last];
-        
-        // Remove duplicates if middle equals first or last
         selected = [...new Set(selected)];
         
-        // If we lost one due to deduplication, grab another
         if (selected.length < 3 && sentences.length > 3) {
             const additional = sentences.find(s => !selected.includes(s));
             if (additional) selected.push(additional);
         }
     }
     
-    // 🛠️ ফিক্স: "..." বা খালি স্ট্রিং বাদ দিয়ে ফিল্টার
     const validSentences = selected.filter(s => {
         const trimmed = s.trim();
         return trimmed !== "" && !/^[.\s\-…]+$/.test(trimmed);
     });
     
-    // যদি সব ফিল্টার হয়ে যায়, প্রথম ভ্যালিড সেন্টেন্স নিই
     if (validSentences.length === 0) {
         const firstValid = sentences.find(s => {
             const trimmed = s.trim();
@@ -323,7 +312,6 @@ function createEnglishSummary(content) {
         }
     }
     
-    // Trim to maximum length
     return validSentences.slice(0, 3).map(s => s.substring(0, 200).trim());
 }
 
@@ -331,9 +319,8 @@ function createEnglishSummary(content) {
 // TRANSLATE TO BENGALI
 // ============================================
 async function translateToBengali(text) {
-    // 🛠️ ফিক্স: খালি বা ডট ডট টেক্সট ট্রান্সলেট না করা
     if (!text || text.trim().length === 0 || /^[.\s\-…]+$/.test(text.trim())) {
-        return text; // Return original text instead of error message
+        return text;
     }
     
     let retries = 3;
@@ -356,10 +343,9 @@ async function translateToBengali(text) {
             
             if (retries === 0) {
                 log(`Translation failed after all retries: ${error.message}`, 'ERROR');
-                return text; // 🛠️ ফিক্স: Return original text as fallback, not error message
+                return text;
             }
             
-            // Exponential backoff
             const waitTime = (4 - retries) * 2000;
             log(`Translation retry in ${waitTime/1000}s (${retries} retries left)`, 'WARN');
             await new Promise(resolve => setTimeout(resolve, waitTime));
@@ -377,10 +363,10 @@ async function urlExists(url) {
         const { data, error } = await supabase
             .from('news_feed')
             .select('id')
-            .eq('sourceUrl', url) // 🛠️ ফিক্স: তোর ডাটাবেজ অনুযায়ী camelCase 'sourceUrl'
+            .eq('sourceUrl', url)
             .single();
         
-        if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+        if (error && error.code !== 'PGRST116') {
             log(`Error checking URL existence: ${error.message}`, 'ERROR');
             return false;
         }
@@ -403,7 +389,7 @@ async function insertNews(newsData) {
             .select();
         
         if (error) {
-            if (error.code === '23505') { // Unique violation
+            if (error.code === '23505') {
                 log(`Duplicate entry skipped: ${newsData.sourceUrl}`, 'WARN');
                 return { success: false, reason: 'duplicate' };
             }
@@ -429,7 +415,6 @@ function validateSummaries(summaries) {
     return summaries.filter(s => {
         if (!s) return false;
         const trimmed = s.toString().trim();
-        // ফিল্টার আউট: খালি, শুধু ডট, শুধু স্পেস, "..." ইত্যাদি
         return trimmed !== "" && 
                trimmed !== "..." && 
                trimmed !== ".." && 
@@ -451,7 +436,7 @@ async function processSource(source) {
         
         if (!feed || !feed.items || feed.items.length === 0) {
             log(`   ⚠️  No items found in feed`, 'WARN');
-            return 0; // সাকসেস কিন্তু ডেটা নাই
+            return 0;
         }
         
         log(`   📦 Found ${feed.items.length} items`);
@@ -460,7 +445,6 @@ async function processSource(source) {
         let skippedCount = 0;
         let errorCount = 0;
         
-        // Process latest items (limit to 10 to avoid rate limits)
         const itemsToProcess = feed.items.slice(0, 10);
         
         for (let i = 0; i < itemsToProcess.length; i++) {
@@ -475,7 +459,6 @@ async function processSource(source) {
                     continue;
                 }
                 
-                // Check for duplicates
                 const exists = await urlExists(sourceUrl);
                 if (exists) {
                     log(`   ⏭️  [${i+1}/${itemsToProcess.length}] Already exists: "${item.title?.substring(0, 50)}..."`);
@@ -483,7 +466,6 @@ async function processSource(source) {
                     continue;
                 }
                 
-                // Get content for summary creation
                 const content = item.content || 
                                item.contentSnippet || 
                                item.summary || 
@@ -494,7 +476,6 @@ async function processSource(source) {
                 log(`   📝 [${i+1}/${itemsToProcess.length}] Creating summary: "${item.title?.substring(0, 50)}..."`);
                 const englishSummary = createEnglishSummary(content);
                 
-                // 🛠️ ইংলিশ সামারি থেকে ডট ডট ফিল্টার
                 const validEnglishSummary = validateSummaries(englishSummary);
                 
                 if (validEnglishSummary.length === 0) {
@@ -503,32 +484,25 @@ async function processSource(source) {
                     continue;
                 }
                 
-                // 🛠️ স্টোর করে রাখি ইংলিশ টাইটেল
                 const englishTitle = item.title || 'No Title';
                 
-                // Translate title
                 log(`   🔄 Translating title...`);
                 let bengaliTitle = await translateToBengali(englishTitle);
-                // 🛠️ ফিক্স: ব্যাকআপ - যদি অনুবাদ ফেইল করে, মূল ইংলিশ টাইটেলই রেখে দেব
                 if (bengaliTitle === 'অনুবাদ উপলব্ধ নয়' || !bengaliTitle || bengaliTitle.trim().length === 0) {
                     bengaliTitle = englishTitle;
                 }
                 
-                // Translate each summary point
                 log(`   🔄 Translating ${validEnglishSummary.length} summary points...`);
                 const bengaliSummaries = [];
                 for (const point of validEnglishSummary) {
                     let translated = await translateToBengali(point);
-                    // 🛠️ ফিক্স: ব্যাকআপ - অনুবাদ ফেইল করলে ফাকা না রেখে ইংরেজি পয়েন্টটাই ঢুকিয়ে দেব
                     if (translated === 'অনুবাদ উপলব্ধ নয়' || !translated || translated.trim().length === 0) {
                         translated = point;
                     }
                     bengaliSummaries.push(translated);
-                    // Small delay between translations
                     await new Promise(resolve => setTimeout(resolve, 500));
                 }
                 
-                // 🛠️ বাংলা সামারি থেকেও ডট ডট ফিল্টার
                 const validBengaliSummaries = validateSummaries(bengaliSummaries);
                 
                 if (validBengaliSummaries.length === 0) {
@@ -537,19 +511,18 @@ async function processSource(source) {
                     continue;
                 }
                 
-                // 🛠️ ফিক্স: স্ক্রিনশটের স্কিমা অনুযায়ী ১০০% ম্যাচিং camelCase অবজেক্ট
+                // 🛠️ ফিক্স: deadline (সব ছোট হাতের)
                 const newsData = {
-                    bengaliTitle: bengaliTitle,                           // TEXT
-                    bengaliSummaries: validBengaliSummaries,             // TEXT[]
-                    category: source.category,                            // TEXT
-                    sourceUrl: sourceUrl,                                 // TEXT, UNIQUE
-                    source_name: source.name,                             // TEXT
-                    deadLine: source.category === 'jobs' ?               // 🛠️ ফিক্স: deadLine (L বড়হাতের)
+                    bengaliTitle: bengaliTitle,
+                    bengaliSummaries: validBengaliSummaries,
+                    category: source.category,
+                    sourceUrl: sourceUrl,
+                    source_name: source.name,
+                    deadline: source.category === 'jobs' ? 
                         new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : 
-                        null                                              // DATE
+                        null
                 };
                 
-                // Insert into database
                 const result = await insertNews(newsData);
                 
                 if (result.success) {
@@ -562,7 +535,6 @@ async function processSource(source) {
                     errorCount++;
                 }
                 
-                // Rate limiting - wait between items
                 await new Promise(resolve => setTimeout(resolve, 2000));
                 
             } catch (error) {
@@ -577,7 +549,7 @@ async function processSource(source) {
         
     } catch (error) {
         log(`❌ Error fetching ${source.name}: ${error.message}`, 'ERROR');
-        return -1; // 🛠️ ফিক্স: এরর বা ক্র্যাশ হলে -1 রিটার্ন করবে
+        return -1;
     }
 }
 
@@ -628,14 +600,14 @@ async function cleanupOldRecords() {
             .from('news_feed')
             .select('id')
             .eq('category', 'jobs')
-            .lt('deadLine', today); // 🛠️ ফিক্স: তোর ডাটাবেজ স্ক্রিনশট অনুযায়ী 'deadLine' (L বড়হাতের)
+            .lt('deadline', today); // 🛠️ ফিক্স: deadline (সব ছোট হাতের)
         
         if (!fetchError && expiredJobs && expiredJobs.length > 0) {
             const { error: deleteError } = await supabase
                 .from('news_feed')
                 .delete()
                 .eq('category', 'jobs')
-                .lt('deadLine', today); // 🛠️ ফিক্স: এখানেও 'deadLine'
+                .lt('deadline', today); // 🛠️ ফিক্স: deadline (সব ছোট হাতের)
             
             if (deleteError) {
                 log(`❌ Error deleting expired jobs: ${deleteError.message}`, 'ERROR');
@@ -689,15 +661,12 @@ async function main() {
     log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
     log('='.repeat(60));
     
-    // Show initial database stats
     const initialCount = await getDatabaseStats();
     log(`\n📊 Initial database records: ${initialCount}`);
     
-    // Filter enabled sources
     const enabledSources = RSS_SOURCES.filter(source => source.enabled);
     log(`\n📋 Processing ${enabledSources.length} RSS sources (${RSS_SOURCES.length - enabledSources.length} disabled)`);
     
-    // Process all sources
     let totalInserted = 0;
     let successfulSources = 0;
     let failedSources = 0;
@@ -708,24 +677,21 @@ async function main() {
         
         const inserted = await processSource(source);
         
-        if (inserted >= 0) { // 🛠️ ফিক্স: ০ বা তার বেশি হলে সোর্স সফল (ডেটা থাকুক বা না থাকুক)
+        if (inserted >= 0) {
             successfulSources++;
             totalInserted += inserted;
-        } else { // 🛠️ ফিক্স: যদি -1 আসে তবেই সোর্সটি Failed
+        } else {
             failedSources++;
         }
         
-        // Longer delay between sources to avoid rate limits
         if (i < enabledSources.length - 1) {
             log(`   ⏳ Waiting 5 seconds before next source...`);
             await new Promise(resolve => setTimeout(resolve, 5000));
         }
     }
     
-    // Cleanup old records
     const deletedCount = await cleanupOldRecords();
     
-    // Show final stats
     const finalCount = await getDatabaseStats();
     
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
@@ -742,7 +708,6 @@ async function main() {
     log(`🏁 Completed at: ${new Date().toISOString()}`);
     log('='.repeat(60));
     
-    // Exit with error code if no sources were successful
     if (successfulSources === 0 && enabledSources.length > 0) {
         log('⚠️  WARNING: No sources were successfully processed!', 'WARN');
     }
