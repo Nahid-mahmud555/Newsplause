@@ -35,6 +35,11 @@
       --accent-dim:    rgba(99, 102, 241, 0.15);
       --accent-glow:   rgba(99, 102, 241, 0.30);
 
+      --like-color:       #ef4444;
+      --like-color-glow:  rgba(239, 68, 68, 0.35);
+      --dislike-color:    #6366f1;
+      --dislike-color-glow: rgba(99, 102, 241, 0.35);
+
       --cat-tech-bg:  rgba(139,92,246,0.12); --cat-tech-text: #c4b5fd;  --cat-tech-ring: rgba(139,92,246,0.25);
       --cat-nat-bg:   rgba(16,185,129,0.12); --cat-nat-text:  #6ee7b7;  --cat-nat-ring:  rgba(16,185,129,0.25);
       --cat-sports-bg:rgba(245,158,11,0.12); --cat-sports-text:#fcd34d; --cat-sports-ring:rgba(245,158,11,0.25);
@@ -84,7 +89,11 @@
     body.lang-en .footer p,
     body.lang-en .live-badge,
     body.lang-en .brand-sub,
-    body.lang-en .error-message {
+    body.lang-en .error-message,
+    body.lang-en .reaction-count,
+    body.lang-en .liked-section-title,
+    body.lang-en .disliked-section-title,
+    body.lang-en .like-count-badge {
       font-family: "Inter", sans-serif;
     }
 
@@ -589,6 +598,40 @@
     }
 
     /* ═══════════════════════════════════════════════
+       LIKED & DISLIKED SECTION TITLES
+    ═══════════════════════════════════════════════ */
+    .liked-section-title,
+    .disliked-section-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+      padding-top: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .liked-section-title .section-icon {
+      color: var(--like-color);
+      font-size: 18px;
+    }
+
+    .disliked-section-title .section-icon {
+      color: var(--dislike-color);
+      font-size: 18px;
+      transform: rotate(180deg);
+      display: inline-block;
+    }
+
+    .section-divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 32px 0 24px;
+      opacity: 0.5;
+    }
+
+    /* ═══════════════════════════════════════════════
        GRID
     ═══════════════════════════════════════════════ */
     .grid {
@@ -735,6 +778,123 @@
     }
 
     /* ═══════════════════════════════════════════════
+       REACTION BUTTONS (LIKE & DISLIKE)
+    ═══════════════════════════════════════════════ */
+    .reaction-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding-top: 8px;
+    }
+
+    .reaction-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: var(--radius-pill);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .reaction-btn .heart-icon {
+      font-size: 20px;
+      line-height: 1;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.25s ease;
+      display: inline-block;
+      color: var(--text-faint);
+    }
+
+    /* Like button (normal heart) */
+    .reaction-btn.like-btn .heart-icon {
+      color: var(--text-faint);
+    }
+
+    .reaction-btn.like-btn.liked .heart-icon {
+      color: var(--like-color);
+      animation: heartPop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+      filter: drop-shadow(0 0 8px var(--like-color-glow));
+    }
+
+    /* Dislike button (upside-down heart) */
+    .reaction-btn.dislike-btn .heart-icon {
+      transform: rotate(180deg);
+      color: var(--text-faint);
+    }
+
+    .reaction-btn.dislike-btn.disliked .heart-icon {
+      color: var(--dislike-color);
+      animation: heartPopUpsideDown 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+      filter: drop-shadow(0 0 8px var(--dislike-color-glow));
+    }
+
+    .reaction-btn:hover .heart-icon {
+      transform: scale(1.15);
+    }
+
+    .reaction-btn.dislike-btn:hover .heart-icon {
+      transform: rotate(180deg) scale(1.15);
+    }
+
+    .reaction-btn.liked:hover .heart-icon {
+      transform: scale(1.1);
+    }
+
+    .reaction-btn.disliked:hover .heart-icon {
+      transform: rotate(180deg) scale(1.1);
+    }
+
+    .reaction-count {
+      font-family: "Inter", sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-faint);
+      min-width: 18px;
+      text-align: center;
+      transition: color 0.25s ease;
+    }
+
+    .reaction-btn.liked .reaction-count {
+      color: var(--like-color);
+    }
+
+    .reaction-btn.disliked .reaction-count {
+      color: var(--dislike-color);
+    }
+
+    /* Global like count badge on card */
+    .global-like-count {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-family: "Inter", sans-serif;
+      font-size: 11px;
+      color: var(--like-color);
+      opacity: 0.7;
+    }
+
+    /* Heart pop animation */
+    @keyframes heartPop {
+      0%   { transform: scale(1); }
+      25%  { transform: scale(1.45); }
+      50%  { transform: scale(0.9); }
+      75%  { transform: scale(1.15); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes heartPopUpsideDown {
+      0%   { transform: rotate(180deg) scale(1); }
+      25%  { transform: rotate(180deg) scale(1.45); }
+      50%  { transform: rotate(180deg) scale(0.9); }
+      75%  { transform: rotate(180deg) scale(1.15); }
+      100% { transform: rotate(180deg) scale(1); }
+    }
+
+    /* ═══════════════════════════════════════════════
        SKELETON LOADER
     ═══════════════════════════════════════════════ */
     .skeleton-card {
@@ -836,6 +996,9 @@
       .welcome-title {
         font-size: 24px;
       }
+      .reaction-row {
+        gap: 12px;
+      }
     }
   </style>
 </head>
@@ -868,8 +1031,8 @@
             <span data-bn="আপনার পছন্দের ক্যাটাগরি" data-en="Your preferred categories">আপনার পছন্দের ক্যাটাগরি</span>
           </li>
           <li class="feature-item">
-            <span class="feature-icon">🔒</span>
-            <span data-bn="সম্পূর্ণ ফ্রি ও বিজ্ঞাপনমুক্ত" data-en="100% free & ad-free">সম্পূর্ণ ফ্রি ও বিজ্ঞাপনমুক্ত</span>
+            <span class="feature-icon">❤️</span>
+            <span data-bn="লাইক ও ডিসলাইক করে ফিড কাস্টমাইজ করুন" data-en="Like & dislike to customize your feed">লাইক ও ডিসলাইক করে ফিড কাস্টমাইজ করুন</span>
           </li>
         </ul>
 
@@ -985,12 +1148,29 @@
           <span class="tab-icon">○</span>
           <span data-bn="বিশ্ব" data-en="World">বিশ্ব</span>
         </button>
+        <!-- 🌟 Liked Tab -->
+        <button class="tab-btn" data-category="liked">
+          <span class="tab-icon">❤️</span>
+          <span data-bn="সবচেয়ে পছন্দের" data-en="Most Liked">সবচেয়ে পছন্দের</span>
+        </button>
       </nav>
     </div>
   </header>
 
   <main class="main">
     <p class="result-count" id="resultCount"></p>
+    
+    <!-- Liked News Section -->
+    <div id="likedSection" style="display: none;">
+      <h3 class="liked-section-title">
+        <span class="section-icon">❤️</span>
+        <span data-bn="পছন্দের সংবাদ" data-en="Liked News">পছন্দের সংবাদ</span>
+      </h3>
+      <div class="grid" id="likedGrid"></div>
+      <hr class="section-divider" />
+    </div>
+    
+    <!-- Main News Grid -->
     <div class="grid" id="newsGrid">
       <div class="skeleton-card">
         <div class="sk-row"><div class="skeleton sk-s"></div><div class="skeleton sk-xs"></div></div>
@@ -1026,6 +1206,16 @@
         <div class="skeleton" style="height:11px;width:45%"></div>
       </div>
     </div>
+    
+    <!-- Disliked News Section -->
+    <div id="dislikedSection" style="display: none;">
+      <hr class="section-divider" />
+      <h3 class="disliked-section-title">
+        <span class="section-icon">❤️</span>
+        <span data-bn="অপছন্দের সংবাদ" data-en="Disliked News">অপছন্দের সংবাদ</span>
+      </h3>
+      <div class="grid" id="dislikedGrid"></div>
+    </div>
   </main>
 
   <footer class="footer">
@@ -1043,8 +1233,10 @@
     const STORAGE_KEY_CATEGORY = "newspulse_preferred_category";
     const STORAGE_KEY_PROFILE  = "newspulse_user_profile";
     const STORAGE_KEY_LANG     = "newspulse_language";
+    const STORAGE_KEY_REACTIONS = "newspulse_reactions"; // { [articleId]: 'liked' | 'disliked' | null }
+    const STORAGE_KEY_LIKED_IDS = "news_liked_ids"; // array of article IDs user liked
     
-    const VALID_CATEGORIES = ["all", "technology", "national", "sports", "jobs", "crime"];
+    const VALID_CATEGORIES = ["all", "technology", "national", "sports", "jobs", "crime", "liked"];
 
     // ──────────────────────────────────────────────────────────
     // INIT SUPABASE
@@ -1059,6 +1251,232 @@
     let realtimeChannel = null;
     let userProfile = null;
     let currentLang = "bn";
+    let reactionsMap = {}; // { [articleId]: 'liked' | 'disliked' | null }
+    let likedIds = []; // array of article IDs user liked (local)
+    let allArticles = []; // current fetched articles cache
+    let globalLikeCounts = {}; // { [articleId]: number } - fetched from Supabase
+
+    // ──────────────────────────────────────────────────────────
+    // REACTIONS MANAGEMENT
+    // ──────────────────────────────────────────────────────────
+    function loadReactions() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY_REACTIONS);
+        if (raw) {
+          reactionsMap = JSON.parse(raw);
+        } else {
+          reactionsMap = {};
+        }
+      } catch(e) {
+        reactionsMap = {};
+      }
+      
+      try {
+        const rawLiked = localStorage.getItem(STORAGE_KEY_LIKED_IDS);
+        if (rawLiked) {
+          likedIds = JSON.parse(rawLiked);
+        } else {
+          likedIds = [];
+        }
+      } catch(e) {
+        likedIds = [];
+      }
+      
+      console.log("[Reactions] Loaded:", Object.keys(reactionsMap).length, "reactions,", likedIds.length, "liked IDs");
+    }
+
+    function saveReactions() {
+      try {
+        localStorage.setItem(STORAGE_KEY_REACTIONS, JSON.stringify(reactionsMap));
+        localStorage.setItem(STORAGE_KEY_LIKED_IDS, JSON.stringify(likedIds));
+      } catch(e) {
+        console.warn("[Reactions] Could not save:", e.message);
+      }
+    }
+
+    // 🌟 UPDATED: handleLike with TOGGLE logic
+    // আগে already liked থাকলে আবার click করলে unlike হয়ে যাবে
+    async function handleLike(articleId, cardElement) {
+      // Check current state
+      const currentReaction = getReaction(articleId);
+      
+      // 🌟 TOGGLE: If already liked, then unlike (remove reaction)
+      if (currentReaction === 'liked') {
+        console.log('[Reaction] 🔄 Toggle OFF like for:', articleId);
+        
+        // Remove from likedIds
+        likedIds = likedIds.filter(id => id !== articleId);
+        localStorage.setItem(STORAGE_KEY_LIKED_IDS, JSON.stringify(likedIds));
+        
+        // Remove reaction from map
+        delete reactionsMap[articleId];
+        saveReactions();
+        
+        // Remove UI classes
+        if (cardElement) {
+          const likeBtn = cardElement.querySelector('.like-btn');
+          if (likeBtn) likeBtn.classList.remove('liked');
+        }
+        
+        // 🌟 Optionally delete from Supabase (if you want to track unlikes too)
+        // For now, we just don't add a new like
+        // You could also add a delete query:
+        // await db.from('article_likes').delete().eq('article_id', articleId).limit(1);
+        
+        // Update global count optimistically
+        if (globalLikeCounts[articleId] && globalLikeCounts[articleId] > 0) {
+          globalLikeCounts[articleId]--;
+        }
+        
+        return;
+      }
+      
+      // 🌟 If disliked previously, remove dislike first then add like
+      if (currentReaction === 'disliked') {
+        console.log('[Reaction] 🔄 Switching from dislike to like for:', articleId);
+      }
+      
+      // 🌟 ADD LIKE: Local state update
+      if (!likedIds.includes(articleId)) {
+        likedIds.push(articleId);
+        localStorage.setItem(STORAGE_KEY_LIKED_IDS, JSON.stringify(likedIds));
+      }
+      
+      // Set reaction in map
+      reactionsMap[articleId] = 'liked';
+      saveReactions();
+      
+      // Card UI class update
+      if (cardElement) {
+        const likeBtn = cardElement.querySelector('.like-btn');
+        const dislikeBtn = cardElement.querySelector('.dislike-btn');
+        if (likeBtn) likeBtn.classList.add('liked');
+        if (dislikeBtn) dislikeBtn.classList.remove('disliked');
+      }
+
+      // Push to Supabase database (global like)
+      try {
+        const { error } = await db
+          .from('article_likes')
+          .insert([{ article_id: articleId }]);
+          
+        if (error) {
+          console.error('[Supabase] Error saving global like:', error.message);
+        } else {
+          console.log('[Supabase] ✅ Global like saved for:', articleId);
+          // Update local count optimistically
+          if (globalLikeCounts[articleId]) {
+            globalLikeCounts[articleId]++;
+          } else {
+            globalLikeCounts[articleId] = 1;
+          }
+        }
+      } catch (err) {
+        console.error('[Supabase] Exception on like:', err);
+      }
+    }
+
+    // 🌟 UPDATED: handleDislike with TOGGLE logic
+    // আগে already disliked থাকলে আবার click করলে undislike হয়ে যাবে
+    async function handleDislike(articleId, cardElement) {
+      // Check current state
+      const currentReaction = getReaction(articleId);
+      
+      // 🌟 TOGGLE: If already disliked, then remove dislike
+      if (currentReaction === 'disliked') {
+        console.log('[Reaction] 🔄 Toggle OFF dislike for:', articleId);
+        
+        // Remove reaction from map
+        delete reactionsMap[articleId];
+        saveReactions();
+        
+        // Remove UI classes
+        if (cardElement) {
+          const dislikeBtn = cardElement.querySelector('.dislike-btn');
+          if (dislikeBtn) dislikeBtn.classList.remove('disliked');
+        }
+        
+        return;
+      }
+      
+      // 🌟 If liked previously, remove like first
+      if (currentReaction === 'liked') {
+        console.log('[Reaction] 🔄 Switching from like to dislike for:', articleId);
+        
+        // Remove from likedIds
+        likedIds = likedIds.filter(id => id !== articleId);
+        localStorage.setItem(STORAGE_KEY_LIKED_IDS, JSON.stringify(likedIds));
+        
+        // Update global count
+        if (globalLikeCounts[articleId] && globalLikeCounts[articleId] > 0) {
+          globalLikeCounts[articleId]--;
+        }
+      }
+      
+      // 🌟 ADD DISLIKE: Set reaction in map
+      reactionsMap[articleId] = 'disliked';
+      saveReactions();
+      
+      // Card UI class update
+      if (cardElement) {
+        const likeBtn = cardElement.querySelector('.like-btn');
+        const dislikeBtn = cardElement.querySelector('.dislike-btn');
+        if (likeBtn) likeBtn.classList.remove('liked');
+        if (dislikeBtn) dislikeBtn.classList.add('disliked');
+      }
+      
+      console.log('[Reaction] Disliked:', articleId);
+    }
+
+    function setReaction(articleId, reactionType) {
+      // Find the card element
+      const cardElement = document.querySelector(`[data-article-id="${articleId}"]`);
+      
+      if (reactionType === 'liked') {
+        handleLike(articleId, cardElement);
+      } else if (reactionType === 'disliked') {
+        handleDislike(articleId, cardElement);
+      }
+      
+      // Re-render after a short delay to show animations first
+      setTimeout(() => {
+        renderAllSections();
+      }, 300);
+    }
+
+    function getReaction(articleId) {
+      return reactionsMap[articleId] || null;
+    }
+
+    // Fetch global like counts from Supabase
+    async function fetchGlobalLikeCounts(articleIds) {
+      if (!articleIds || articleIds.length === 0) return;
+      
+      try {
+        const { data, error } = await db
+          .from('article_likes')
+          .select('article_id', { count: 'exact' })
+          .in('article_id', articleIds);
+          
+        if (error) {
+          console.error('[Supabase] Error fetching like counts:', error.message);
+          return;
+        }
+        
+        const counts = {};
+        if (data) {
+          data.forEach(row => {
+            const id = row.article_id;
+            counts[id] = (counts[id] || 0) + 1;
+          });
+        }
+        
+        globalLikeCounts = { ...globalLikeCounts, ...counts };
+        console.log('[Supabase] 📊 Global like counts:', globalLikeCounts);
+      } catch (err) {
+        console.error('[Supabase] Exception fetching like counts:', err);
+      }
+    }
 
     // ──────────────────────────────────────────────────────────
     // LANGUAGE SYSTEM
@@ -1100,7 +1518,8 @@
         national: { bn: "জাতীয়", en: "National" },
         sports: { bn: "খেলাধুলা", en: "Sports" },
         jobs: { bn: "চাকরি", en: "Jobs" },
-        crime: { bn: "বিশ্ব", en: "World" }
+        crime: { bn: "বিশ্ব", en: "World" },
+        liked: { bn: "সবচেয়ে পছন্দের", en: "Most Liked" }
       };
       
       document.querySelectorAll("#categoryNav .tab-btn").forEach(btn => {
@@ -1127,7 +1546,7 @@
       const lang = option.dataset.lang;
       if (lang === currentLang) return;
       applyLanguage(lang);
-      fetchArticles(activeCategory);
+      renderAllSections();
     });
 
     // ──────────────────────────────────────────────────────────
@@ -1144,7 +1563,7 @@
         return;
       }
 
-      const allowed = ["all", ...userProfile.categories];
+      const allowed = ["all", ...userProfile.categories, "liked"];
       
       allButtons.forEach(btn => {
         const cat = btn.dataset.category;
@@ -1444,6 +1863,30 @@
       `).join("");
     }
 
+    function renderReactionButtons(articleId) {
+      const reaction = getReaction(articleId);
+      const likeCount = globalLikeCounts[articleId] || 0;
+      
+      return `
+        <div class="reaction-row">
+          <button class="reaction-btn like-btn ${reaction === 'liked' ? 'liked' : ''}" 
+                  data-article-id="${articleId}" 
+                  data-reaction="liked"
+                  aria-label="Like">
+            <span class="heart-icon">❤️</span>
+            <span class="reaction-count">${likeCount}</span>
+          </button>
+          <button class="reaction-btn dislike-btn ${reaction === 'disliked' ? 'disliked' : ''}" 
+                  data-article-id="${articleId}" 
+                  data-reaction="disliked"
+                  aria-label="Dislike">
+            <span class="heart-icon">❤️</span>
+            <span class="reaction-count"></span>
+          </button>
+        </div>
+      `;
+    }
+
     function renderCard(article, index) {
       let title, summaries;
       
@@ -1468,14 +1911,17 @@
         ? `<span class="deadline-label">${deadlineText}: ${formatDeadline(article.deadline)}</span>`
         : `<span class="source-label">${sourceText}: <span class="source-name">${escapeHtml(article.source_name || unknownText)}</span></span>`;
 
+      const articleId = article.id || `article-${article.created_at}-${index}`;
+
       return `
-        <article class="card" style="animation-delay:${index * 55}ms" role="article">
+        <article class="card" style="animation-delay:${index * 55}ms" role="article" data-article-id="${articleId}">
           <div class="card-meta">
             <span class="cat-badge ${catClass(article.category)}">${catLabel(article.category)}</span>
             <time class="time-ago">${timeAgo(article.created_at)}</time>
           </div>
           <h2 class="card-title">${escapeHtml(title)}</h2>
           <ul class="bullet-list">${bullets}</ul>
+          ${renderReactionButtons(articleId)}
           <div class="card-footer">
             ${deadlineHtml}
             <a href="${escapeHtml(article.source_url || '#')}" target="_blank" rel="noopener noreferrer" class="read-btn">${readText}</a>
@@ -1486,8 +1932,12 @@
 
     function renderEmpty(category) {
       const msg = currentLang === "bn"
-        ? (category === "all" ? "পাইপলাইন শীঘ্রই সংবাদ আনবে" : "এই বিভাগে এখন কোনো সংবাদ নেই")
-        : (category === "all" ? "News pipeline coming soon" : "No news in this category yet");
+        ? (category === "all" ? "পাইপলাইন শীঘ্রই সংবাদ আনবে" : 
+           category === "liked" ? "এখনো কেউ কোনো নিউজ লাইক করেনি" :
+           "এই বিভাগে এখন কোনো সংবাদ নেই")
+        : (category === "all" ? "News pipeline coming soon" : 
+           category === "liked" ? "No one has liked any news yet" :
+           "No news in this category yet");
       const titleText = currentLang === "bn" ? "কোনো সংবাদ নেই" : "No news found";
       return `
         <div class="empty-state">
@@ -1496,6 +1946,122 @@
           <p class="empty-sub">${msg}</p>
         </div>
       `;
+    }
+
+    // ──────────────────────────────────────────────────────────
+    // RENDER ALL SECTIONS (LIKED, MAIN, DISLIKED)
+    // ──────────────────────────────────────────────────────────
+    function renderAllSections() {
+      // If on "liked" tab, show global liked articles
+      if (activeCategory === "liked") {
+        document.getElementById("likedSection").style.display = "none";
+        document.getElementById("dislikedSection").style.display = "none";
+        if (allArticles.length > 0) {
+          document.getElementById("newsGrid").innerHTML = allArticles.map((article, i) => renderCard(article, i)).join("");
+          attachReactionListeners();
+        }
+        return;
+      }
+      
+      if (!allArticles || allArticles.length === 0) {
+        document.getElementById("newsGrid").innerHTML = renderSkeletons(6);
+        document.getElementById("likedSection").style.display = "none";
+        document.getElementById("dislikedSection").style.display = "none";
+        return;
+      }
+
+      // Separate articles based on reactions
+      const likedArticles = [];
+      const dislikedArticles = [];
+      const neutralArticles = [];
+
+      allArticles.forEach((article, index) => {
+        const articleId = article.id || `article-${article.created_at}-${index}`;
+        const reaction = getReaction(articleId);
+        
+        if (reaction === 'liked') {
+          likedArticles.push({ article, index, articleId });
+        } else if (reaction === 'disliked') {
+          dislikedArticles.push({ article, index, articleId });
+        } else {
+          neutralArticles.push({ article, index, articleId });
+        }
+      });
+
+      // Render Liked Section
+      const likedSection = document.getElementById("likedSection");
+      const likedGrid = document.getElementById("likedGrid");
+      if (likedArticles.length > 0) {
+        likedSection.style.display = "block";
+        likedGrid.innerHTML = likedArticles.map(({ article, index, articleId }) => 
+          renderCard(article, index)
+        ).join("");
+      } else {
+        likedSection.style.display = "none";
+        likedGrid.innerHTML = "";
+      }
+
+      // Render Main (Neutral) Grid
+      const newsGrid = document.getElementById("newsGrid");
+      if (neutralArticles.length > 0) {
+        newsGrid.innerHTML = neutralArticles.map(({ article, index, articleId }) => 
+          renderCard(article, index)
+        ).join("");
+      } else {
+        newsGrid.innerHTML = renderEmpty(activeCategory);
+      }
+
+      // Render Disliked Section
+      const dislikedSection = document.getElementById("dislikedSection");
+      const dislikedGrid = document.getElementById("dislikedGrid");
+      if (dislikedArticles.length > 0) {
+        dislikedSection.style.display = "block";
+        dislikedGrid.innerHTML = dislikedArticles.map(({ article, index, articleId }) => 
+          renderCard(article, index)
+        ).join("");
+      } else {
+        dislikedSection.style.display = "none";
+        dislikedGrid.innerHTML = "";
+      }
+
+      updateResultCount(neutralArticles.length + likedArticles.length + dislikedArticles.length);
+      attachReactionListeners();
+    }
+
+    function updateResultCount(total) {
+      const count = document.getElementById("resultCount");
+      if (activeCategory === "liked") {
+        count.textContent = currentLang === "bn" 
+          ? `${total} টি সংবাদ (সবচেয়ে পছন্দের)` 
+          : `${total} articles (Most Liked)`;
+      } else if (currentLang === "bn") {
+        count.textContent = activeCategory === "all" ? `${total} টি সংবাদ (সকল)` : `${total} টি সংবাদ (${catLabel(activeCategory)})`;
+      } else {
+        count.textContent = activeCategory === "all" ? `${total} articles (All)` : `${total} articles (${catLabel(activeCategory)})`;
+      }
+    }
+
+    // ──────────────────────────────────────────────────────────
+    // REACTION EVENT HANDLERS
+    // ──────────────────────────────────────────────────────────
+    function attachReactionListeners() {
+      document.querySelectorAll(".reaction-btn").forEach(btn => {
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+        
+        newBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          const articleId = newBtn.dataset.articleId;
+          const reactionType = newBtn.dataset.reaction;
+          
+          console.log("[Reaction] Clicked:", reactionType, "for article:", articleId);
+          
+          // 🌟 This now handles TOGGLE automatically
+          setReaction(articleId, reactionType);
+        });
+      });
     }
 
     // ──────────────────────────────────────────────────────────
@@ -1508,25 +2074,102 @@
       grid.innerHTML = renderSkeletons(6);
       count.textContent = "";
 
+      document.getElementById("likedSection").style.display = "none";
+      document.getElementById("dislikedSection").style.display = "none";
+
       try {
+        // Handle "liked" category - fetch most liked articles globally
+        if (category === "liked") {
+          const { data: likeData, error: likeError } = await db
+            .from('article_likes')
+            .select('article_id', { count: 'exact' });
+            
+          if (likeError) {
+            console.error('[Supabase] Error fetching liked articles:', likeError.message);
+            grid.innerHTML = renderEmpty(category);
+            allArticles = [];
+            return;
+          }
+          
+          const likeCountMap = {};
+          if (likeData) {
+            likeData.forEach(row => {
+              likeCountMap[row.article_id] = (likeCountMap[row.article_id] || 0) + 1;
+            });
+          }
+          
+          const sortedIds = Object.entries(likeCountMap)
+            .sort(([, a], [, b]) => b - a)
+            .slice(0, 20)
+            .map(([id]) => id);
+            
+          if (sortedIds.length === 0) {
+            grid.innerHTML = renderEmpty(category);
+            allArticles = [];
+            updateResultCount(0);
+            return;
+          }
+          
+          const { data: articlesData, error: articlesError } = await db
+            .from('news_feed')
+            .select('*')
+            .in('id', sortedIds)
+            .order('created_at', { ascending: false });
+            
+          if (articlesError) {
+            console.error('[Supabase] Error fetching articles for liked IDs:', articlesError.message);
+            grid.innerHTML = renderEmpty(category);
+            allArticles = [];
+            return;
+          }
+          
+          const sortedArticles = (articlesData || []).sort((a, b) => {
+            const countA = likeCountMap[a.id] || 0;
+            const countB = likeCountMap[b.id] || 0;
+            return countB - countA;
+          });
+          
+          allArticles = sortedArticles;
+          globalLikeCounts = { ...globalLikeCounts, ...likeCountMap };
+          
+          grid.innerHTML = sortedArticles.map((article, i) => renderCard(article, i)).join("");
+          updateResultCount(sortedArticles.length);
+          attachReactionListeners();
+          return;
+        }
+        
+        // Normal category fetch
         let query = db.from("news_feed").select("*", { count: "exact" }).order("created_at", { ascending: false }).limit(50);
         if (category !== "all") query = query.eq("category", category);
 
         const { data, error, count: total } = await query;
-        if (error) { grid.innerHTML = renderEmpty(category); return; }
-
-        if (currentLang === "bn") {
-          count.textContent = category === "all" ? `${total || 0} টি সংবাদ (সকল)` : `${total || 0} টি সংবাদ (${catLabel(category)})`;
-        } else {
-          count.textContent = category === "all" ? `${total || 0} articles (All)` : `${total || 0} articles (${catLabel(category)})`;
+        if (error) { 
+          grid.innerHTML = renderEmpty(category); 
+          allArticles = [];
+          return; 
         }
 
-        if (!data || data.length === 0) { grid.innerHTML = renderEmpty(category); return; }
+        if (!data || data.length === 0) { 
+          grid.innerHTML = renderEmpty(category); 
+          allArticles = [];
+          updateResultCount(0);
+          return; 
+        }
 
         let filteredData = category !== "all" ? data.filter(a => a.category === category) : data;
-        grid.innerHTML = filteredData.map((article, i) => renderCard(article, i)).join("");
+        allArticles = filteredData;
+        
+        const articleIds = filteredData.map(a => a.id).filter(Boolean);
+        if (articleIds.length > 0) {
+          await fetchGlobalLikeCounts(articleIds);
+        }
+        
+        renderAllSections();
+        
       } catch (err) {
+        console.error('[Fetch] Exception:', err);
         grid.innerHTML = renderEmpty(category);
+        allArticles = [];
       }
     }
 
@@ -1537,20 +2180,36 @@
       if (realtimeChannel) db.removeChannel(realtimeChannel);
       realtimeChannel = db.channel("newspulse_live")
         .on("postgres_changes", { event: "INSERT", schema: "public", table: "news_feed" }, (payload) => {
-          if (activeCategory === "all" || payload.new.category === activeCategory) fetchArticles(activeCategory);
+          if (activeCategory === "all" || payload.new.category === activeCategory) {
+            fetchArticles(activeCategory);
+          }
+        })
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "article_likes" }, (payload) => {
+          console.log('[Realtime] New like detected:', payload.new);
+          if (activeCategory === "liked") {
+            fetchArticles(activeCategory);
+          } else {
+            const articleId = payload.new.article_id;
+            if (articleId) {
+              globalLikeCounts[articleId] = (globalLikeCounts[articleId] || 0) + 1;
+              renderAllSections();
+            }
+          }
         })
         .subscribe();
+        
+      console.log('[Realtime] Channel set up');
     }
 
     // ──────────────────────────────────────────────────────────
     // INIT
     // ──────────────────────────────────────────────────────────
     function initializeApp() {
-      // Load language preference first
       currentLang = loadLanguagePreference();
       applyLanguage(currentLang);
       
-      // Load user profile
+      loadReactions();
+      
       userProfile = loadUserProfile();
 
       if (!userProfile) {
@@ -1579,22 +2238,18 @@
     // EVENT LISTENERS
     // ──────────────────────────────────────────────────────────
     
-    // Start button (Step 1 → Step 2)
     document.getElementById("startBtn").addEventListener("click", () => {
       goToStep(2);
     });
 
-    // Back button (Step 2 → Step 1)
     document.getElementById("backBtn").addEventListener("click", () => {
       goToStep(1);
     });
 
-    // Done button (Complete onboarding)
     document.getElementById("doneBtn").addEventListener("click", () => {
       completeOnboarding();
     });
 
-    // Category nav click
     document.getElementById("categoryNav").addEventListener("click", (e) => {
       const btn = e.target.closest(".tab-btn");
       if (!btn) return;
