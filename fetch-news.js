@@ -433,26 +433,37 @@ function validateSummaries(summaries) {
 }
 
 // =========================================================================
-// ZERO-INSTALL & ZERO-LAG LIGHTWEIGHT HTML DIRECT SCRAPER (USING REGEX)
+// ZERO-INSTALL & ZERO-LAG LIGHTWEIGHT HTML DIRECT SCRAPER WITH ANTI-SPAM
 // =========================================================================
 async function processDirectScrapersFree() {
-    log('\n🕷️ Starting Zero-Install RegEx HTML Scraping for Channel i...');
+    log('\n🕷️ Starting Zero-Install RegEx HTML Scraping with Anti-Spam Engine...');
     let totalDirectInserted = 0;
 
+    // টার্গেট চ্যানেলের লিস্ট (চ্যানেল আই, যমুনা টিভি, সময় নিউজ)
     const targets = [
-        { name: 'Channel i Direct National', url: 'https://www.channelionline.com/category/national/', category: 'national' },
-        { name: 'Channel i Direct Jobs', url: 'https://www.channelionline.com/category/corporate-news/job-market/', category: 'jobs' }
+        { name: 'Channel i Direct National', url: 'https://www.channelionline.com/category/national/', category: 'national', domain: 'channelionline.com' },
+        { name: 'Channel i Direct Jobs', url: 'https://www.channelionline.com/category/corporate-news/job-market/', category: 'jobs', domain: 'channelionline.com' },
+        { name: 'Jamuna TV Direct National', url: 'https://www.jamuna.tv/category/national', category: 'national', domain: 'jamuna.tv' },
+        { name: 'Somoy News Direct Tech', url: 'https://somoynews.tv/category/technology', category: 'technology', domain: 'somoynews.tv' }
+    ];
+
+    // জব সেকশনের বাধ্যতামূলক কি-ওয়ার্ড ফিল্টার (হোয়াইটলিস্ট)
+    const jobWhitelist = ['চাকরি', 'নিয়োগ', 'ক্যারিয়ার', 'পদ', 'বিজ্ঞপ্তি', 'জব', 'নিয়োগ', 'খালি', 'আবেদন', 'কর্মসংস্থান', 'বিসিএস'];
+
+    // আজেবাজে সাইডবার, মেনু বা সোশ্যাল মিডিয়া বাটন ফিল্টার (ব্ল্যাকলিস্ট)
+    const globalBlacklist = [
+        'পড়ুন', 'ভিডিও', 'সর্বশেষ', 'জনপ্রিয়', 'লাইভ', 'ফেসবুক', 'টুইটার', 'ইউটিউব', 
+        'চ্যানেল আই', 'সাবস্ক্রাইব', 'শেয়ার', 'Jamuna TV', 'Somoy News', 'বিজ্ঞাপন'
     ];
 
     for (const target of targets) {
         try {
             log(`🌐 Fetching direct raw text via built-in fetch: ${target.url}`);
             
-            // কোনো থার্ড পার্টি প্যাকেজ ছাড়াই নোড জেএস-এর বিল্ট-ইন fetch ব্যবহার করা হয়েছে
             const response = await fetch(target.url, { headers: FETCH_HEADERS, signal: AbortSignal.timeout(12000) });
             const html = await response.text();
 
-            // RegEx দিয়ে এঙ্কর ট্যাগ (<a>) এবং ভেতরের টাইটেল এক্সট্রাক্ট করার হাই-পারফরম্যান্স প্যাটার্ন
+            // RegEx দিয়ে নিখুঁত এঙ্কর ট্যাগ ও টাইটেল ফিল্টারিং
             const linkRegex = /<a\s+[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi;
             let match;
             let count = 0;
@@ -461,18 +472,28 @@ async function processDirectScrapersFree() {
                 const sourceUrl = match[1];
                 let title = cleanText(match[2]);
 
-                // শুধু স্পেসিফিক নিউজের সঠিক লিংক ফিল্টার করার লজিক
+                // ১. বেসিক ইউআরএল ভ্যালিডেশন
                 if (!sourceUrl || sourceUrl.includes('#') || sourceUrl.trim() === '' || !sourceUrl.startsWith('http')) continue;
-                if (!sourceUrl.includes('/national/') && !sourceUrl.includes('/job-market/') && !sourceUrl.includes('channelionline.com/')) continue;
+                if (!sourceUrl.includes(target.domain)) continue;
                 
-                // টাইটেল যদি খুব ছোট হয় বা ভেতরের কোনো ইমেজ ট্যাগ থাকে তা স্কিপ করা
+                // ২. লেংথ এবং ইমপ্রোপার ট্যাগ ফিল্টার
                 if (title.length < 15 || title.includes('<img') || title.includes('পড়ুন')) continue;
 
-                // ডুপ্লিকেট ইউআরএল চেক
+                // ৩. গ্লোবাল অ্যান্টি-স্প্যাম ব্ল্যাকলিস্ট ফিল্টার
+                const hasBlacklistWord = globalBlacklist.some(word => title.includes(word));
+                if (hasBlacklistWord) continue;
+
+                // ৪. জব সেকশনের জন্য স্ট্রাকচার্ড হোয়াইটলিস্ট চেক
+                if (target.category === 'jobs') {
+                    const isRealJobNews = jobWhitelist.some(word => title.includes(word));
+                    if (!isRealJobNews) continue; // চাকরির বাইরে সাইডবারের কোনো নিউজ জবে ঢুকবে না
+                }
+
+                // ৫. ডুপ্লিকেট ইউআরএল চেক
                 const exists = await urlExists(sourceUrl);
                 if (exists) continue;
 
-                log(`   ✨ RegEx Engine Found: "${title.substring(0, 50)}..."`);
+                log(`   ✨ Smart Engine Validated [${target.category}]: "${title.substring(0, 50)}..."`);
                 count++;
 
                 let validBengaliSummaries = [title];
@@ -491,10 +512,10 @@ async function processDirectScrapersFree() {
                 const result = await insertNews(newsData);
                 if (result.success) {
                     totalDirectInserted++;
-                    log(`      ✅ Package-free direct insertion success!`);
+                    log(`      ✅ Clean direct insertion success!`);
                 }
             }
-            log(`   📊 Target Summary [${target.name}]: Captured using 0% extra RAM.`);
+            log(`   📊 Target Summary [${target.name}]: Captured smoothly using 0% extra RAM.`);
         } catch (error) {
             log(`❌ RegEx Scraping Exception for ${target.name}: ${error.message}`, 'ERROR');
         }
@@ -767,7 +788,7 @@ async function main() {
         }
     }
     
-    // ২. জিরো-ইনস্টল ডিরেক্ট ওয়েব স্ক্রেপার মডিউল রান হবে (কোনো প্যাকেজ ছাড়া)
+    // ২. জিরো-ইনস্টল ডিরেক্ট ওয়েব স্ক্রেপার মডিউল রান হবে (কোনো প্যাকেজ ছাড়া)
     const directInsertedCount = await processDirectScrapersFree();
     totalInserted += directInsertedCount;
     
