@@ -31,6 +31,13 @@ const parser = new Parser({
     maxRedirects: 3
 });
 
+// রিয়েল ব্রাউজার হেডার (বিল্ট-ইন fetch-এর জন্য)
+const FETCH_HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+    'Accept-Language': 'bn-BD,bn;q=0.9,en-US;q=0.8,en;q=0.7'
+};
+
 // ============================================
 // RSS SOURCES CONFIGURATION
 // ============================================
@@ -336,7 +343,8 @@ async function translateToBengali(text) {
                 return result.text;
             }
             
-            throw new Error('Empty translation result');
+            let error = new Error('Empty translation result');
+            throw error;
             
         } catch (error) {
             retries--;
@@ -424,6 +432,76 @@ function validateSummaries(summaries) {
     });
 }
 
+// =========================================================================
+// ZERO-INSTALL & ZERO-LAG LIGHTWEIGHT HTML DIRECT SCRAPER (USING REGEX)
+// =========================================================================
+async function processDirectScrapersFree() {
+    log('\n🕷️ Starting Zero-Install RegEx HTML Scraping for Channel i...');
+    let totalDirectInserted = 0;
+
+    const targets = [
+        { name: 'Channel i Direct National', url: 'https://www.channelionline.com/category/national/', category: 'national' },
+        { name: 'Channel i Direct Jobs', url: 'https://www.channelionline.com/category/corporate-news/job-market/', category: 'jobs' }
+    ];
+
+    for (const target of targets) {
+        try {
+            log(`🌐 Fetching direct raw text via built-in fetch: ${target.url}`);
+            
+            // কোনো থার্ড পার্টি প্যাকেজ ছাড়াই নোড জেএস-এর বিল্ট-ইন fetch ব্যবহার করা হয়েছে
+            const response = await fetch(target.url, { headers: FETCH_HEADERS, signal: AbortSignal.timeout(12000) });
+            const html = await response.text();
+
+            // RegEx দিয়ে এঙ্কর ট্যাগ (<a>) এবং ভেতরের টাইটেল এক্সট্রাক্ট করার হাই-পারফরম্যান্স প্যাটার্ন
+            const linkRegex = /<a\s+[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi;
+            let match;
+            let count = 0;
+
+            while ((match = linkRegex.exec(html)) !== null && count < 8) {
+                const sourceUrl = match[1];
+                let title = cleanText(match[2]);
+
+                // শুধু স্পেসিফিক নিউজের সঠিক লিংক ফিল্টার করার লজিক
+                if (!sourceUrl || sourceUrl.includes('#') || sourceUrl.trim() === '' || !sourceUrl.startsWith('http')) continue;
+                if (!sourceUrl.includes('/national/') && !sourceUrl.includes('/job-market/') && !sourceUrl.includes('channelionline.com/')) continue;
+                
+                // টাইটেল যদি খুব ছোট হয় বা ভেতরের কোনো ইমেজ ট্যাগ থাকে তা স্কিপ করা
+                if (title.length < 15 || title.includes('<img') || title.includes('পড়ুন')) continue;
+
+                // ডুপ্লিকেট ইউআরএল চেক
+                const exists = await urlExists(sourceUrl);
+                if (exists) continue;
+
+                log(`   ✨ RegEx Engine Found: "${title.substring(0, 50)}..."`);
+                count++;
+
+                let validBengaliSummaries = [title];
+
+                const newsData = {
+                    bengaliTitle: title,
+                    bengaliSummaries: validBengaliSummaries,
+                    category: target.category,
+                    sourceUrl: sourceUrl,
+                    source_name: target.name,
+                    deadline: target.category === 'jobs' ? 
+                        new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : 
+                        null
+                };
+
+                const result = await insertNews(newsData);
+                if (result.success) {
+                    totalDirectInserted++;
+                    log(`      ✅ Package-free direct insertion success!`);
+                }
+            }
+            log(`   📊 Target Summary [${target.name}]: Captured using 0% extra RAM.`);
+        } catch (error) {
+            log(`❌ RegEx Scraping Exception for ${target.name}: ${error.message}`, 'ERROR');
+        }
+    }
+    return totalDirectInserted;
+}
+
 // ============================================
 // PROCESS RSS SOURCE
 // ============================================
@@ -486,13 +564,13 @@ async function processSource(source) {
                 
                 const englishTitle = item.title || 'No Title';
                 
-                log(`   🔄 Translating title...`);
+                log(`   ... Translating title ...`);
                 let bengaliTitle = await translateToBengali(englishTitle);
                 if (bengaliTitle === 'অনুবাদ উপলব্ধ নয়' || !bengaliTitle || bengaliTitle.trim().length === 0) {
                     bengaliTitle = englishTitle;
                 }
                 
-                log(`   🔄 Translating ${validEnglishSummary.length} summary points...`);
+                log(`   ... Translating ${validEnglishSummary.length} summary points ...`);
                 const bengaliSummaries = [];
                 for (const point of validEnglishSummary) {
                     let translated = await translateToBengali(point);
@@ -511,7 +589,6 @@ async function processSource(source) {
                     continue;
                 }
                 
-                // 🛠️ ফিক্স: deadline (সব ছোট হাতের)
                 const newsData = {
                     bengaliTitle: bengaliTitle,
                     bengaliSummaries: validBengaliSummaries,
@@ -546,7 +623,6 @@ async function processSource(source) {
         
         log(`   📊 Source Summary: ${processedCount} inserted, ${skippedCount} skipped, ${errorCount} errors`);
         return processedCount;
-        
     } catch (error) {
         log(`❌ Error fetching ${source.name}: ${error.message}`, 'ERROR');
         return -1;
@@ -600,14 +676,14 @@ async function cleanupOldRecords() {
             .from('news_feed')
             .select('id')
             .eq('category', 'jobs')
-            .lt('deadline', today); // 🛠️ ফিক্স: deadline (সব ছোট হাতের)
+            .lt('deadline', today);
         
         if (!fetchError && expiredJobs && expiredJobs.length > 0) {
             const { error: deleteError } = await supabase
                 .from('news_feed')
                 .delete()
                 .eq('category', 'jobs')
-                .lt('deadline', today); // 🛠️ ফিক্স: deadline (সব ছোট হাতের)
+                .lt('deadline', today);
             
             if (deleteError) {
                 log(`❌ Error deleting expired jobs: ${deleteError.message}`, 'ERROR');
@@ -671,6 +747,7 @@ async function main() {
     let successfulSources = 0;
     let failedSources = 0;
     
+    // ১. প্রথাগত আরএসএস সোর্সগুলো রান হবে
     for (let i = 0; i < enabledSources.length; i++) {
         const source = enabledSources[i];
         log(`\n[Source ${i + 1}/${enabledSources.length}]`);
@@ -690,25 +767,29 @@ async function main() {
         }
     }
     
+    // ২. জিরো-ইনস্টল ডিরেক্ট ওয়েব স্ক্রেপার মডিউল রান হবে (কোনো প্যাকেজ ছাড়া)
+    const directInsertedCount = await processDirectScrapersFree();
+    totalInserted += directInsertedCount;
+    
+    // ৩. পুরাতন ২৪ ঘণ্টার ডাটা এবং এক্সপায়ার্ড জব কন্টেন্ট ক্লিনআপ
     const deletedCount = await cleanupOldRecords();
     
     const finalCount = await getDatabaseStats();
-    
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
     
     log('\n' + '='.repeat(60));
-    log('📊 FINAL REPORT');
+    log('📊 FINAL REPORT WITH LIGHTWEIGHT HYBRID ENGINE');
     log('='.repeat(60));
     log(`⏱️  Duration: ${duration} seconds`);
-    log(`📥 Total new items inserted: ${totalInserted}`);
-    log(`✅ Successful sources: ${successfulSources}/${enabledSources.length}`);
-    log(`❌ Failed sources: ${failedSources}/${enabledSources.length}`);
+    log(`📥 Total new items inserted: ${totalInserted} (RSS + RegEx DOM)`);
+    log(`✅ Successful RSS sources: ${successfulSources}/${enabledSources.length}`);
+    log(`❌ Failed RSS sources: ${failedSources}/${enabledSources.length}`);
     log(`🗑️  Records cleaned: ${deletedCount}`);
     log(`📈 Database records: ${initialCount} → ${finalCount} (${finalCount - initialCount > 0 ? '+' : ''}${finalCount - initialCount})`);
     log(`🏁 Completed at: ${new Date().toISOString()}`);
     log('='.repeat(60));
     
-    if (successfulSources === 0 && enabledSources.length > 0) {
+    if (successfulSources === 0 && directInsertedCount === 0 && enabledSources.length > 0) {
         log('⚠️  WARNING: No sources were successfully processed!', 'WARN');
     }
 }
