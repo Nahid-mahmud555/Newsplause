@@ -16,7 +16,7 @@
 
   <style>
     /* ═══════════════════════════════════════════════
-       DESIGN TOKENS
+       DESIGN TOKENS — DARK MODE (DEFAULT)
     ═══════════════════════════════════════════════ */
     :root {
       --bg-base:      #020817;
@@ -51,6 +51,108 @@
 
       --radius-card: 16px;
       --radius-pill: 999px;
+
+      /* Skeleton */
+      --sk-base: #1e293b;
+      --sk-shine: #243447;
+
+      /* Header */
+      --header-bg: rgba(2, 8, 23, 0.88);
+
+      /* Overlay */
+      --overlay-bg: rgba(2, 8, 23, 0.95);
+
+      /* Scrollbar */
+      --scrollbar-track: #020817;
+      --scrollbar-thumb: #1e2d3d;
+
+      /* Skeleton card border */
+      --skeleton-border: #1e2d3d;
+    }
+
+    /* ═══════════════════════════════════════════════
+       DESIGN TOKENS — LIGHT MODE
+    ═══════════════════════════════════════════════ */
+    body.light-mode {
+      --bg-base:      #f8fafc;
+      --bg-surface:   #ffffff;
+      --bg-card:      #ffffff;
+      --bg-card-hover:#f1f5f9;
+      --border:       #e2e8f0;
+      --border-hover: #cbd5e1;
+
+      --text-primary:   #0f172a;
+      --text-secondary: #475569;
+      --text-muted:     #94a3b8;
+      --text-faint:     #cbd5e1;
+
+      --accent:        #6366f1;
+      --accent-dim:    rgba(99, 102, 241, 0.10);
+      --accent-glow:   rgba(99, 102, 241, 0.20);
+
+      --like-color:       #ef4444;
+      --like-color-glow:  rgba(239, 68, 68, 0.25);
+      --dislike-color:    #6366f1;
+      --dislike-color-glow: rgba(99, 102, 241, 0.25);
+
+      --telegram-color:   #0088cc;
+      --telegram-glow:    rgba(0, 136, 204, 0.25);
+
+      --cat-tech-bg:  rgba(139,92,246,0.08); --cat-tech-text: #7c3aed;  --cat-tech-ring: rgba(139,92,246,0.20);
+      --cat-nat-bg:   rgba(16,185,129,0.08); --cat-nat-text:  #059669;  --cat-nat-ring:  rgba(16,185,129,0.20);
+      --cat-sports-bg:rgba(245,158,11,0.08); --cat-sports-text:#d97706; --cat-sports-ring:rgba(245,158,11,0.20);
+      --cat-jobs-bg:  rgba(14,165,233,0.08); --cat-jobs-text: #0284c7;  --cat-jobs-ring: rgba(14,165,233,0.20);
+      --cat-crime-bg: rgba(239,68,68,0.08);  --cat-crime-text:#dc2626;  --cat-crime-ring: rgba(239,68,68,0.20);
+
+      --sk-base: #e2e8f0;
+      --sk-shine: #f1f5f9;
+
+      --header-bg: rgba(255, 255, 255, 0.88);
+      --overlay-bg: rgba(248, 250, 252, 0.95);
+
+      --scrollbar-track: #f8fafc;
+      --scrollbar-thumb: #e2e8f0;
+
+      --skeleton-border: #e2e8f0;
+    }
+
+    /* ═══════════════════════════════════════════════
+       THEME TOGGLE BUTTON
+    ═══════════════════════════════════════════════ */
+    .theme-toggle-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.25s ease;
+      color: var(--text-secondary);
+      flex-shrink: 0;
+    }
+
+    .theme-toggle-btn:hover {
+      border-color: var(--border-hover);
+      color: var(--text-primary);
+      background: var(--bg-card-hover);
+      transform: rotate(15deg);
+    }
+
+    .theme-toggle-btn .icon-sun,
+    .theme-toggle-btn .icon-moon {
+      transition: all 0.3s ease;
+    }
+
+    body.light-mode .theme-toggle-btn .icon-moon {
+      display: none;
+    }
+
+    body:not(.light-mode) .theme-toggle-btn .icon-sun {
+      display: none;
     }
 
     /* ═══════════════════════════════════════════════
@@ -68,6 +170,7 @@
       line-height: 1.7;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
+      transition: background 0.3s ease, color 0.3s ease;
     }
 
     /* Language: English override */
@@ -109,8 +212,8 @@
 
     /* Scrollbar */
     ::-webkit-scrollbar       { width: 4px; }
-    ::-webkit-scrollbar-track { background: var(--bg-base); }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    ::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+    ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 2px; }
     ::-webkit-scrollbar-thumb:hover { background: #475569; }
 
     /* ═══════════════════════════════════════════════
@@ -157,7 +260,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(2, 8, 23, 0.95);
+      background: var(--overlay-bg);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       z-index: 1000;
@@ -498,7 +601,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(2, 8, 23, 0.95);
+      background: var(--overlay-bg);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       z-index: 1001;
@@ -750,10 +853,11 @@
       position: sticky;
       top: 0;
       z-index: 100;
-      background: rgba(2, 8, 23, 0.88);
+      background: var(--header-bg);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border-bottom: 1px solid var(--border);
+      transition: background 0.3s ease;
     }
 
     .header-inner {
@@ -1227,7 +1331,7 @@
     ═══════════════════════════════════════════════ */
     .skeleton-card {
       background: var(--bg-card);
-      border: 1px solid var(--border);
+      border: 1px solid var(--skeleton-border);
       border-radius: var(--radius-card);
       padding: 24px;
       display: flex;
@@ -1236,7 +1340,7 @@
     }
 
     .skeleton {
-      background: linear-gradient(90deg, #1e293b 25%, #243447 50%, #1e293b 75%);
+      background: linear-gradient(90deg, var(--sk-base) 25%, var(--sk-shine) 50%, var(--sk-base) 75%);
       background-size: 800px 100%;
       animation: shimmer 1.8s linear infinite;
       border-radius: 6px;
@@ -1273,7 +1377,7 @@
        FOOTER
     ═══════════════════════════════════════════════ */
     .footer {
-      border-top: 1px solid rgba(30,45,61,0.5);
+      border-top: 1px solid var(--border);
       padding: 28px 24px;
       text-align: center;
     }
@@ -1494,6 +1598,11 @@
           <span class="brand-sub" data-bn="— বাংলা সংবাদ" data-en="— News in Bengali">— বাংলা সংবাদ</span>
         </div>
         <div style="display: flex; align-items: center; gap: 10px;">
+          <!-- Theme Toggle -->
+          <button class="theme-toggle-btn" id="themeToggleBtn" aria-label="Toggle theme">
+            <span class="icon-sun">☀️</span>
+            <span class="icon-moon">🌙</span>
+          </button>
           <!-- Language Toggle -->
           <div class="lang-toggle" id="langToggle" title="Toggle Language">
             <span class="lang-option active" data-lang="bn">বাংলা</span>
@@ -1627,10 +1736,11 @@
     const STORAGE_KEY_LANG     = "newspulse_language";
     const STORAGE_KEY_REACTIONS = "newspulse_reactions";
     const STORAGE_KEY_LIKED_IDS = "news_liked_ids";
+    const STORAGE_KEY_THEME    = "newspulse_theme"; // 🌟 NEW
     
     const VALID_CATEGORIES = ["all", "technology", "national", "sports", "jobs", "crime", "liked"];
 
-    // 🌟 Telegram Bot Username — এখানে তোমার বটের ইউজারনেম
+    // Telegram Bot Username
     const TELEGRAM_BOT_USERNAME = "newsplause_bot";
 
     // ──────────────────────────────────────────────────────────
@@ -1650,6 +1760,39 @@
     let likedIds = [];
     let allArticles = [];
     let globalLikeCounts = {};
+    let currentTheme = "dark"; // 🌟 NEW
+
+    // 🌟 THEME MANAGEMENT
+    function loadTheme() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY_THEME);
+        if (saved === "light" || saved === "dark") {
+          currentTheme = saved;
+        } else {
+          currentTheme = "dark";
+        }
+      } catch(e) {
+        currentTheme = "dark";
+      }
+      applyTheme();
+    }
+
+    function applyTheme() {
+      if (currentTheme === "light") {
+        document.body.classList.add("light-mode");
+      } else {
+        document.body.classList.remove("light-mode");
+      }
+    }
+
+    function toggleTheme() {
+      currentTheme = currentTheme === "dark" ? "light" : "dark";
+      try {
+        localStorage.setItem(STORAGE_KEY_THEME, currentTheme);
+      } catch(e) {}
+      applyTheme();
+      console.log("[Theme] Switched to:", currentTheme);
+    }
 
     // ──────────────────────────────────────────────────────────
     // REACTIONS MANAGEMENT
@@ -1848,7 +1991,6 @@
       overlay.classList.add("active");
       document.body.style.overflow = "hidden";
       
-      // Reset form state
       document.getElementById("subscribeEmailInput").value = "";
       document.getElementById("emailSuccess").classList.remove("show");
       document.getElementById("emailError").classList.remove("show");
@@ -1872,7 +2014,6 @@
       const successMsg = document.getElementById("emailSuccess");
       const errorMsg = document.getElementById("emailError");
 
-      // Hide previous messages
       successMsg.classList.remove("show");
       errorMsg.classList.remove("show");
 
@@ -1881,23 +2022,18 @@
         return;
       }
 
-      // Disable button during submission
       submitBtn.disabled = true;
       const originalText = submitBtn.innerHTML;
       submitBtn.innerHTML = currentLang === "bn" ? "পাঠানো হচ্ছে..." : "Sending...";
 
       try {
-        // 🌟 Save to Supabase subscribers table
         const { error } = await db
           .from('subscribers')
           .insert([{ email: email }]);
 
         if (error) {
-          // Duplicate email (code 23505) or other error
           if (error.code === '23505') {
-            // Already subscribed
             successMsg.classList.add("show");
-            console.log('[Subscribe] Email already exists:', email);
           } else {
             console.error('[Subscribe] Supabase error:', error.message);
             const errorSpan = errorMsg.querySelector('.subscribe-error-text');
@@ -1907,7 +2043,6 @@
             errorMsg.classList.add("show");
           }
         } else {
-          console.log('[Subscribe] ✅ Email saved:', email);
           successMsg.classList.add("show");
           emailInput.value = "";
         }
@@ -2621,6 +2756,9 @@
     // INIT
     // ──────────────────────────────────────────────────────────
     function initializeApp() {
+      // 🌟 Load theme first
+      loadTheme();
+      
       currentLang = loadLanguagePreference();
       applyLanguage(currentLang);
       
@@ -2654,6 +2792,11 @@
     // EVENT LISTENERS
     // ──────────────────────────────────────────────────────────
     
+    // 🌟 Theme toggle
+    document.getElementById("themeToggleBtn").addEventListener("click", () => {
+      toggleTheme();
+    });
+    
     document.getElementById("startBtn").addEventListener("click", () => {
       goToStep(2);
     });
@@ -2668,14 +2811,12 @@
 
     // Category nav + Subscribe button click handler
     document.getElementById("categoryNav").addEventListener("click", (e) => {
-      // Check if subscribe button was clicked
       if (e.target.closest("#subscribeNavBtn")) {
         e.preventDefault();
         openSubscribeModal();
         return;
       }
       
-      // Otherwise handle tab button click
       const btn = e.target.closest(".tab-btn");
       if (!btn) return;
       updateCategory(btn.dataset.category);
