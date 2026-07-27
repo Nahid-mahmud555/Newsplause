@@ -2,8 +2,8 @@ name: Fetch News & Telegram Broadcast
 
 on:
   schedule:
-    - cron: '0 0 * * *'      # সকাল ৬টা (Bangladesh = UTC+6)
-    - cron: '0 12 * * *'     # সন্ধ্যা ৬টা (Bangladesh = UTC+6)
+    - cron: '0 0 * * *'
+    - cron: '0 12 * * *'
   workflow_dispatch:
 
 jobs:
@@ -19,9 +19,9 @@ jobs:
           node-version: '22'
 
       - name: Install dependencies
-        run: npm install --legacy-peer-deps
+        run: npm install --legacy-peer-deps --no-package-lock
 
-      - name: Run News Fetcher + Telegram Broadcast
+      - name: Run News Fetcher
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
