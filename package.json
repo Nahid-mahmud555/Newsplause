@@ -1,48 +1,20 @@
 {
   "name": "newspulse-backend",
   "version": "1.0.0",
-  "description": "NewsPulse - Zero-Friction Automated News Fetcher & Translator with Telegram & Email",
+  "description": "NewsPulse - News Fetcher, Translator, Telegram & Gmail Email",
   "main": "fetch-news.js",
   "type": "module",
   "scripts": {
     "fetch": "node fetch-news.js",
-    "test": "node fetch-news.js",
-    "dev": "node --watch fetch-news.js",
     "start": "node fetch-news.js",
     "bot": "node telegram-bot.js"
-  },
-  "keywords": [
-    "rss",
-    "news",
-    "translator",
-    "bengali",
-    "supabase",
-    "automation",
-    "telegram-bot",
-    "email-digest",
-    "resend"
-  ],
-  "author": "NewsPulse Team",
-  "license": "MIT",
-  "engines": {
-    "node": ">=22.0.0"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
     "@vitalets/google-translate-api": "^9.2.0",
     "dotenv": "^16.3.1",
-    "resend": "^3.2.0",
-    "rss-parser": "^3.13.0"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.2"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Nahid-mahmud555/newspulse.git"
-  },
-  "bugs": {
-    "url": "https://github.com/Nahid-mahmud555/newspulse/issues"
-  },
-  "homepage": "https://github.com/Nahid-mahmud555/newspulse#readme"
+    "nodemailer": "^6.9.0",
+    "rss-parser": "^3.13.0",
+    "telegraf": "^4.15.0"
+  }
 }
