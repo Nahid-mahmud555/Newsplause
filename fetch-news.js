@@ -13,7 +13,7 @@ dotenv.config();
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN;
-const fallbackChatId = process.env.TELEGRAM_CHAT_ID; // টেস্ট বা ফলব্যাক ব্যাকআপের জন্য
+const fallbackChatId = process.env.TELEGRAM_CHAT_ID;
 
 if (!supabaseUrl || !supabaseKey) {
     console.error('❌ ERROR: Missing Supabase credentials!');
@@ -282,7 +282,7 @@ async function broadcastNewsToTelegram(newsData) {
 
         // ১. সুপাবেজ থেকে সব একটিভ সাবস্ক্রাইবার আইডি তুলে আনা
         const { data: subscribers, error } = await supabase
-            .from('subscribers') // তোর টেবিলের নাম যদি 'users' হয় তবে বদলে 'users' দিবি
+            .from('subscribers')
             .select('telegram_chat_id, chat_id');
 
         if (!error && subscribers && subscribers.length > 0) {
@@ -311,14 +311,13 @@ async function broadcastNewsToTelegram(newsData) {
         let message = `${categoryEmoji} <b>${newsData.bengaliTitle}</b>\n`;
         if (newsData.source_name) message += `🏛️ <i>উৎস: ${newsData.source_name}</i>\n`;
         if (summaries) message += `\n${summaries}\n`;
-        if (newsData.sourceUrl) message += `\n🔗 <a href="${newsData.sourceUrl}">বিস্তারিত পড়ুন</a>`;
+        if (newsData.sourceUrl) message += `\n🔗 <a href="${newsData.sourceUrl}">বিস্তারিত পড়ুন</a>`;
 
         log(`📢 Broadcasting news to ${recipientChatIds.length} Telegram subscribers...`);
 
-        // ৪. লুপ চালিয়ে সবাইকে মেসেজ পাঠানো
+        // ৪. লুপ চালিয়ে সবাইকে মেসেজ পাঠানো
         for (const chatId of recipientChatIds) {
             await sendTelegramMessage(chatId, message);
-            // টেলিগ্রাম এপিআই রেট লিমিট এড়াতে ছোট ওয়েট
             await new Promise(resolve => setTimeout(resolve, 800));
         }
     } catch (error) {
@@ -409,15 +408,17 @@ function createEnglishSummary(content) {
 }
 
 // ============================================
-// TRANSLATE TO BENGALI WITH UNLIMITED RETRIES
+// TRANSLATE TO BENGALI WITH SAFE RETRIES
 // ============================================
 async function translateToBengali(text) {
     if (!text || text.trim().length === 0 || /^[.\s\-…]+$/.test(text.trim())) {
         return text;
     }
 
+    const maxRetries = 3;
     let attempt = 0;
-    while (true) {
+
+    while (attempt < maxRetries) {
         attempt++;
         try {
             const result = await translate(text, { 
@@ -432,14 +433,17 @@ async function translateToBengali(text) {
             throw new Error('Empty or invalid translation returned from API');
             
         } catch (error) {
-            log(`⚠️ Translation API Error/Limit Exceeded (Attempt ${attempt}): ${error.message}`, 'WARN');
-            log(`⏸️ Rate Limit Hit! Resting for 5 minutes (300 seconds) before retrying this item...`, 'WARN');
-            
-            // ৫ মিনিট ওয়েট (৩০০,০০০ মি.সে.)
-            await new Promise(resolve => setTimeout(resolve, 5 * 60 * 1000));
-            log(`🔄 Resuming translation attempt ${attempt + 1}...`, 'INFO');
+            log(`⚠️ Translation API Error/Limit Exceeded (Attempt ${attempt}/${maxRetries}): ${error.message}`, 'WARN');
+            if (attempt < maxRetries) {
+                log(`⏸️ Rate Limit Hit! Resting for 30 seconds before retry...`, 'WARN');
+                await new Promise(resolve => setTimeout(resolve, 30000));
+            } else {
+                log(`⚠️ Max retries reached for translation. Returning original text.`, 'WARN');
+                return text;
+            }
         }
     }
+    return text;
 }
 
 // ============================================
@@ -518,7 +522,6 @@ async function processDirectScrapersFree() {
     log('\n🕷️ Starting Zero-Install RegEx HTML Scraping with Anti-Spam Engine...');
     let totalDirectInserted = 0;
 
-    // টার্গেট চ্যানেলের লিস্ট (চ্যানেল আই, যমুনা টিভি, সময় নিউজ)
     const targets = [
         { name: 'Channel i Direct National', url: 'https://www.channelionline.com/category/national/', category: 'national', domain: 'channelionline.com' },
         { name: 'Channel i Direct Jobs', url: 'https://www.channelionline.com/category/corporate-news/job-market/', category: 'jobs', domain: 'channelionline.com' },
@@ -526,10 +529,8 @@ async function processDirectScrapersFree() {
         { name: 'Somoy News Direct Tech', url: 'https://somoynews.tv/category/technology', category: 'technology', domain: 'somoynews.tv' }
     ];
 
-    // জব সেকশনের বাধ্যতামূলক কি-ওয়ার্ড ফিল্টার (হোয়াইটলিস্ট)
     const jobWhitelist = ['চাকরি', 'নিয়োগ', 'ক্যারিয়ার', 'পদ', 'বিজ্ঞপ্তি', 'জব', 'নিয়োগ', 'খালি', 'আবেদন', 'কর্মসংস্থান', 'বিসিএস'];
 
-    // আজেবাজে সাইডবার, মেনু বা সোশ্যাল মিডিয়া বাটন ফিল্টার (ব্ল্যাকলিস্ট)
     const globalBlacklist = [
         'পড়ুন', 'ভিডিও', 'সর্বশেষ', 'জনপ্রিয়', 'লাইভ', 'ফেসবুক', 'টুইটার', 'ইউটিউব', 
         'চ্যানেল আই', 'সাবস্ক্রাইব', 'শেয়ার', 'Jamuna TV', 'Somoy News', 'বিজ্ঞাপন'
@@ -542,7 +543,6 @@ async function processDirectScrapersFree() {
             const response = await fetch(target.url, { headers: FETCH_HEADERS, signal: AbortSignal.timeout(12000) });
             const html = await response.text();
 
-            // RegEx দিয়ে নিখুঁত এঙ্কর ট্যাগ ও টাইটেল ফিল্টারিং
             const linkRegex = /<a\s+[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi;
             let match;
             let count = 0;
@@ -551,24 +551,19 @@ async function processDirectScrapersFree() {
                 const sourceUrl = match[1];
                 let title = cleanText(match[2]);
 
-                // ১. বেসিক ইউআরএল ভ্যালিডেশন
                 if (!sourceUrl || sourceUrl.includes('#') || sourceUrl.trim() === '' || !sourceUrl.startsWith('http')) continue;
                 if (!sourceUrl.includes(target.domain)) continue;
                 
-                // ২. লেংথ এবং ইমপ্রোপার ট্যাগ ফিল্টার
                 if (title.length < 15 || title.includes('<img') || title.includes('পড়ুন')) continue;
 
-                // ৩. গ্লোবাল অ্যান্টি-স্প্যাম ব্ল্যাকলিস্ট ফিল্টার
                 const hasBlacklistWord = globalBlacklist.some(word => title.includes(word));
                 if (hasBlacklistWord) continue;
 
-                // ৪. জব সেকশনের জন্য স্ট্রাকচার্ড হোয়াইটলিস্ট চেক
                 if (target.category === 'jobs') {
                     const isRealJobNews = jobWhitelist.some(word => title.includes(word));
-                    if (!isRealJobNews) continue; // চাকরির বাইরে সাইডবারের কোনো নিউজ জবে ঢুকবে না
+                    if (!isRealJobNews) continue;
                 }
 
-                // ৫. ডুপ্লিকেট ইউআরএল চেক
                 const exists = await urlExists(sourceUrl);
                 if (exists) continue;
 
@@ -592,8 +587,6 @@ async function processDirectScrapersFree() {
                 if (result.success) {
                     totalDirectInserted++;
                     log(`      ✅ Clean direct insertion success!`);
-                    
-                    // 🚀 টেলিগ্রাম অটো-ব্রডকাস্ট
                     await broadcastNewsToTelegram(newsData);
                 }
             }
@@ -667,11 +660,8 @@ async function processSource(source) {
                 
                 const englishTitle = item.title || 'No Title';
 
-                // ==========================================================
-                // ⏳ TRANSLATION SAFETY DELAY (1 to 2 mins wait before translating each news)
-                // ==========================================================
-                const preWaitTime = Math.floor(Math.random() * (120000 - 60000 + 1)) + 60000;
-                log(`   ⏳ Pausing ${(preWaitTime / 1000).toFixed(0)} seconds before starting Bengali translation for API rate-limit safety...`);
+                const preWaitTime = Math.floor(Math.random() * (15000 - 5000 + 1)) + 5000;
+                log(`   ⏳ Pausing ${(preWaitTime / 1000).toFixed(0)} seconds before starting Bengali translation...`);
                 await new Promise(resolve => setTimeout(resolve, preWaitTime));
                 
                 log(`   ... Translating title ...`);
@@ -682,7 +672,6 @@ async function processSource(source) {
                 for (const point of validEnglishSummary) {
                     let translated = await translateToBengali(point);
                     bengaliSummaries.push(translated);
-                    // Point-to-point micro delay
                     await new Promise(resolve => setTimeout(resolve, 2000));
                 }
                 
@@ -712,7 +701,6 @@ async function processSource(source) {
                     log(`   ✅ [${i+1}/${itemsToProcess.length}] Inserted: "${bengaliTitle.substring(0, 50)}..."`);
                     log(`   📋 Summary points: ${validBengaliSummaries.length}`);
                     
-                    // 🚀 টেলিগ্রাম অটো-ব্রডকাস্ট
                     await broadcastNewsToTelegram(newsData);
                 } else if (result.reason === 'duplicate') {
                     skippedCount++;
@@ -746,7 +734,6 @@ async function cleanupOldRecords() {
     let deleted24h = 0;
     let deletedJobs = 0;
     
-    // Delete non-jobs older than 24 hours
     try {
         const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
         
@@ -776,7 +763,6 @@ async function cleanupOldRecords() {
         log(`❌ Exception during 24h cleanup: ${error.message}`, 'ERROR');
     }
     
-    // Delete expired jobs
     try {
         const today = new Date().toISOString().split('T')[0];
         
@@ -870,12 +856,12 @@ async function main() {
         }
         
         if (i < enabledSources.length - 1) {
-            log(`   ⏳ Waiting 5 seconds before next source...`);
-            await new Promise(resolve => setTimeout(resolve, 5000));
+            log(`   ⏳ Waiting 3 seconds before next source...`);
+            await new Promise(resolve => setTimeout(resolve, 3000));
         }
     }
     
-    // ২. জিরো-ইনস্টল ডিরেক্ট ওয়েব স্ক্রেপার মডিউল রান হবে (কোনো প্যাকেজ ছাড়া)
+    // ২. জিরো-ইনস্টল ডিরেক্ট ওয়েব স্ক্রেপার মডিউল রান হবে
     const directInsertedCount = await processDirectScrapersFree();
     totalInserted += directInsertedCount;
     
@@ -889,42 +875,19 @@ async function main() {
     log('📊 FINAL REPORT WITH LIGHTWEIGHT HYBRID ENGINE');
     log('='.repeat(60));
     log(`⏱️  Duration: ${duration} seconds`);
-    log(`📥 Total new items inserted: ${totalInserted} (RSS + RegEx DOM)`);
+    log(`📥 Total new items inserted: ${totalInserted} (RSS + Direct Scraper)`);
     log(`✅ Successful RSS sources: ${successfulSources}/${enabledSources.length}`);
     log(`❌ Failed RSS sources: ${failedSources}/${enabledSources.length}`);
-    log(`🗑️  Records cleaned: ${deletedCount}`);
-    log(`📈 Database records: ${initialCount} → ${finalCount} (${finalCount - initialCount > 0 ? '+' : ''}${finalCount - initialCount})`);
-    log(`🏁 Completed at: ${new Date().toISOString()}`);
+    log(`🧹 Total records cleaned up: ${deletedCount}`);
+    log(`📈 Database records: ${initialCount} -> ${finalCount}`);
     log('='.repeat(60));
-    
-    if (successfulSources === 0 && directInsertedCount === 0 && enabledSources.length > 0) {
-        log('⚠️  WARNING: No sources were successfully processed!', 'WARN');
-    }
+    log('🎉 NewsPulse Fetcher Completed Successfully\n');
 }
 
-// ============================================
-// ERROR HANDLING & EXECUTION
-// ============================================
-process.on('unhandledRejection', (error) => {
-    log(`FATAL: Unhandled rejection: ${error.message}`, 'ERROR');
-    log(error.stack, 'ERROR');
-    process.exit(1);
-});
-
-process.on('uncaughtException', (error) => {
-    log(`FATAL: Uncaught exception: ${error.message}`, 'ERROR');
-    log(error.stack, 'ERROR');
-    process.exit(1);
-});
-
-// Execute main function
+// Execute Script
 main()
-    .then(() => {
-        log('\n✅ Script completed successfully');
-        process.exit(0);
-    })
-    .catch((error) => {
-        log(`\n❌ Script failed: ${error.message}`, 'ERROR');
-        log(error.stack, 'ERROR');
+    .then(() => process.exit(0))
+    .catch((err) => {
+        log(`❌ Critical Unhandled Engine Failure: ${err.message}`, 'ERROR');
         process.exit(1);
     });
