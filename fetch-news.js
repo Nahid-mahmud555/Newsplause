@@ -12,6 +12,8 @@ dotenv.config();
 // Initialize Supabase client
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN;
+const fallbackChatId = process.env.TELEGRAM_CHAT_ID; // টেস্ট বা ফলব্যাক ব্যাকআপের জন্য
 
 if (!supabaseUrl || !supabaseKey) {
     console.error('❌ ERROR: Missing Supabase credentials!');
@@ -237,6 +239,90 @@ function log(message, type = 'INFO') {
         fs.appendFileSync(logFile, logMessage + '\n');
     } catch (error) {
         // Silently fail
+    }
+}
+
+// ============================================
+// TELEGRAM NOTIFICATION UTILITY
+// ============================================
+async function sendTelegramMessage(chatId, text) {
+    if (!telegramBotToken || !chatId) return;
+
+    const url = `https://api.telegram.org/bot${telegramBotToken}/sendMessage`;
+    
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: chatId,
+                text: text,
+                parse_mode: 'HTML',
+                disable_web_page_preview: false
+            })
+        });
+        
+        const data = await response.json();
+        if (!data.ok) {
+            log(`⚠️ Telegram sending failed for ${chatId}: ${data.description}`, 'WARN');
+        }
+    } catch (error) {
+        log(`❌ Telegram API Error: ${error.message}`, 'ERROR');
+    }
+}
+
+async function broadcastNewsToTelegram(newsData) {
+    if (!telegramBotToken) {
+        log(`ℹ️ TELEGRAM_BOT_TOKEN not provided, skipping Telegram broadcast.`, 'INFO');
+        return;
+    }
+
+    try {
+        let recipientChatIds = [];
+
+        // ১. সুপাবেজ থেকে সব একটিভ সাবস্ক্রাইবার আইডি তুলে আনা
+        const { data: subscribers, error } = await supabase
+            .from('subscribers') // তোর টেবিলের নাম যদি 'users' হয় তবে বদলে 'users' দিবি
+            .select('telegram_chat_id, chat_id');
+
+        if (!error && subscribers && subscribers.length > 0) {
+            recipientChatIds = subscribers
+                .map(sub => sub.telegram_chat_id || sub.chat_id)
+                .filter(Boolean);
+        }
+
+        // ২. যদি ডাটাবেজে কোনো ইউজার না থাকে তবে সিক্রেটের TELEGRAM_CHAT_ID-তে পাঠাবে
+        if (recipientChatIds.length === 0 && fallbackChatId) {
+            recipientChatIds.push(fallbackChatId);
+        }
+
+        if (recipientChatIds.length === 0) {
+            log(`ℹ️ No active subscribers found for Telegram broadcast.`);
+            return;
+        }
+
+        // ৩. সুন্দর একটি HTML টেক্সট মেসেজ সাজানো
+        const summaries = newsData.bengaliSummaries && newsData.bengaliSummaries.length > 0
+            ? newsData.bengaliSummaries.map(s => `• ${s}`).join('\n')
+            : '';
+
+        const categoryEmoji = newsData.category === 'jobs' ? '💼' : newsData.category === 'technology' ? '💻' : newsData.category === 'sports' ? '⚽' : '📰';
+
+        let message = `${categoryEmoji} <b>${newsData.bengaliTitle}</b>\n`;
+        if (newsData.source_name) message += `🏛️ <i>উৎস: ${newsData.source_name}</i>\n`;
+        if (summaries) message += `\n${summaries}\n`;
+        if (newsData.sourceUrl) message += `\n🔗 <a href="${newsData.sourceUrl}">বিস্তারিত পড়ুন</a>`;
+
+        log(`📢 Broadcasting news to ${recipientChatIds.length} Telegram subscribers...`);
+
+        // ৪. লুপ চালিয়ে সবাইকে মেসেজ পাঠানো
+        for (const chatId of recipientChatIds) {
+            await sendTelegramMessage(chatId, message);
+            // টেলিগ্রাম এপিআই রেট লিমিট এড়াতে ছোট ওয়েট
+            await new Promise(resolve => setTimeout(resolve, 800));
+        }
+    } catch (error) {
+        log(`❌ Broadcast Exception: ${error.message}`, 'ERROR');
     }
 }
 
@@ -506,6 +592,9 @@ async function processDirectScrapersFree() {
                 if (result.success) {
                     totalDirectInserted++;
                     log(`      ✅ Clean direct insertion success!`);
+                    
+                    // 🚀 টেলিগ্রাম অটো-ব্রডকাস্ট
+                    await broadcastNewsToTelegram(newsData);
                 }
             }
             log(`   📊 Target Summary [${target.name}]: Captured smoothly using 0% extra RAM.`);
@@ -622,6 +711,9 @@ async function processSource(source) {
                     processedCount++;
                     log(`   ✅ [${i+1}/${itemsToProcess.length}] Inserted: "${bengaliTitle.substring(0, 50)}..."`);
                     log(`   📋 Summary points: ${validBengaliSummaries.length}`);
+                    
+                    // 🚀 টেলিগ্রাম অটো-ব্রডকাস্ট
+                    await broadcastNewsToTelegram(newsData);
                 } else if (result.reason === 'duplicate') {
                     skippedCount++;
                 } else {
