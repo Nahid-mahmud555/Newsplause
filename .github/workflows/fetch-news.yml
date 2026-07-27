@@ -11,16 +11,16 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node.js Environment
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: ''
+          node-version: '20'
+          cache: 'npm'
 
       - name: Install Dependencies
-        run: npm install --no-package-lock
+        run: npm ci
 
       - name: Execute News Fetcher Engine
         env:
