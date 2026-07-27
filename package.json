@@ -1,32 +1,17 @@
 {
   "name": "newspulse-backend",
   "version": "1.0.0",
-  "description": "NewsPulse - Complete News Engine with Fetch, Translate, Telegram Bot & Gmail Email Digest",
+  "description": "NewsPulse - Complete News Engine",
   "main": "fetch-news.js",
   "type": "module",
   "scripts": {
     "fetch": "node fetch-news.js",
     "start": "node fetch-news.js",
     "bot": "node telegram-bot.js",
-    "test-email": "node test-email.js",
-    "dev": "node --watch fetch-news.js"
+    "test-email": "node test-email.js"
   },
-  "keywords": [
-    "rss",
-    "news",
-    "translator",
-    "bengali",
-    "supabase",
-    "telegram-bot",
-    "email-digest",
-    "gmail-smtp",
-    "automation"
-  ],
   "author": "NewsPulse Team",
   "license": "MIT",
-  "engines": {
-    "node": ">=22.0.0"
-  },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
     "@vitalets/google-translate-api": "^9.2.0",
