@@ -2,8 +2,8 @@ name: Fetch News
 
 on:
   schedule:
-    - cron: '0 */6 * * *'  # প্রতি ৬ ঘণ্টায় চালাবে
-  workflow_dispatch:        # Manual trigger
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
 
 jobs:
   fetch:
@@ -18,7 +18,7 @@ jobs:
           node-version: '22'
 
       - name: Install dependencies
-        run: npm install
+        run: npm install --no-package-lock
 
       - name: Run News Fetcher
         env:
