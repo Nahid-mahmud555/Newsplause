@@ -1,14 +1,15 @@
 {
   "name": "newspulse-backend",
   "version": "1.0.0",
-  "description": "NewsPulse - Zero-Friction Automated News Fetcher & Translator",
+  "description": "NewsPulse - Zero-Friction Automated News Fetcher & Translator with Telegram & Email",
   "main": "fetch-news.js",
   "type": "module",
   "scripts": {
     "fetch": "node fetch-news.js",
     "test": "node fetch-news.js",
     "dev": "node --watch fetch-news.js",
-    "start": "node fetch-news.js"
+    "start": "node fetch-news.js",
+    "bot": "node telegram-bot.js"
   },
   "keywords": [
     "rss",
@@ -16,7 +17,10 @@
     "translator",
     "bengali",
     "supabase",
-    "automation"
+    "automation",
+    "telegram-bot",
+    "email-digest",
+    "resend"
   ],
   "author": "NewsPulse Team",
   "license": "MIT",
@@ -27,6 +31,7 @@
     "@supabase/supabase-js": "^2.39.0",
     "@vitalets/google-translate-api": "^9.2.0",
     "dotenv": "^16.3.1",
+    "resend": "^3.2.0",
     "rss-parser": "^3.13.0"
   },
   "devDependencies": {
