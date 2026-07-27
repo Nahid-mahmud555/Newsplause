@@ -17,7 +17,7 @@ const fallbackChatId = process.env.TELEGRAM_CHAT_ID;
 
 if (!supabaseUrl || !supabaseKey) {
     console.error('❌ ERROR: Missing Supabase credentials!');
-    console.error('Make sure SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set in .env file');
+    console.error('Make sure SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set in environment variables');
     process.exit(1);
 }
 
@@ -408,41 +408,31 @@ function createEnglishSummary(content) {
 }
 
 // ============================================
-// TRANSLATE TO BENGALI WITH SAFE RETRIES
+// LIGHTWEIGHT TRANSLATE (Non-Blocking)
 // ============================================
 async function translateToBengali(text) {
     if (!text || text.trim().length === 0 || /^[.\s\-…]+$/.test(text.trim())) {
         return text;
     }
 
-    const maxRetries = 3;
-    let attempt = 0;
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-    while (attempt < maxRetries) {
-        attempt++;
-        try {
-            const result = await translate(text, { 
-                to: 'bn',
-                forceTo: true
-            });
-            
-            if (result && result.text && result.text.trim().length > 0 && result.text !== 'অনুবাদ উপলব্ধ নয়') {
-                return result.text;
-            }
-            
-            throw new Error('Empty or invalid translation returned from API');
-            
-        } catch (error) {
-            log(`⚠️ Translation API Error/Limit Exceeded (Attempt ${attempt}/${maxRetries}): ${error.message}`, 'WARN');
-            if (attempt < maxRetries) {
-                log(`⏸️ Rate Limit Hit! Resting for 30 seconds before retry...`, 'WARN');
-                await new Promise(resolve => setTimeout(resolve, 30000));
-            } else {
-                log(`⚠️ Max retries reached for translation. Returning original text.`, 'WARN');
-                return text;
-            }
+        const result = await translate(text, { 
+            to: 'bn',
+            forceTo: true
+        });
+        
+        clearTimeout(timeoutId);
+
+        if (result && result.text && result.text.trim().length > 0) {
+            return result.text;
         }
+    } catch (error) {
+        log(`⚠️ Translation skipped/rate-limited, using original text: ${error.message}`, 'WARN');
     }
+    
     return text;
 }
 
@@ -567,7 +557,7 @@ async function processDirectScrapersFree() {
                 const exists = await urlExists(sourceUrl);
                 if (exists) continue;
 
-                log(`   ✨ Smart Engine Validated [${target.category}]: "${title.substring(0, 50)}..."`);
+                log(`    ✨ Smart Engine Validated [${target.category}]: "${title.substring(0, 50)}..."`);
                 count++;
 
                 let validBengaliSummaries = [title];
@@ -590,7 +580,7 @@ async function processDirectScrapersFree() {
                     await broadcastNewsToTelegram(newsData);
                 }
             }
-            log(`   📊 Target Summary [${target.name}]: Captured smoothly using 0% extra RAM.`);
+            log(`    📊 Target Summary [${target.name}]: Captured smoothly using 0% extra RAM.`);
         } catch (error) {
             log(`❌ RegEx Scraping Exception for ${target.name}: ${error.message}`, 'ERROR');
         }
@@ -603,17 +593,17 @@ async function processDirectScrapersFree() {
 // ============================================
 async function processSource(source) {
     log(`\n📡 Processing: ${source.name} (${source.category})`);
-    log(`   URL: ${source.url}`);
+    log(`    URL: ${source.url}`);
     
     try {
         const feed = await parser.parseURL(source.url);
         
         if (!feed || !feed.items || feed.items.length === 0) {
-            log(`   ⚠️  No items found in feed`, 'WARN');
+            log(`    ⚠️  No items found in feed`, 'WARN');
             return 0;
         }
         
-        log(`   📦 Found ${feed.items.length} items`);
+        log(`    📦 Found ${feed.items.length} items`);
         
         let processedCount = 0;
         let skippedCount = 0;
@@ -628,57 +618,52 @@ async function processSource(source) {
                 const sourceUrl = item.link || item.guid;
                 
                 if (!sourceUrl) {
-                    log(`   ⚠️  Skipping item without URL`, 'WARN');
+                    log(`    ⚠️  Skipping item without URL`, 'WARN');
                     skippedCount++;
                     continue;
                 }
                 
                 const exists = await urlExists(sourceUrl);
                 if (exists) {
-                    log(`   ⏭️  [${i+1}/${itemsToProcess.length}] Already exists: "${item.title?.substring(0, 50)}..."`);
+                    log(`    ⏭️  [${i+1}/${itemsToProcess.length}] Already exists: "${item.title?.substring(0, 50)}..."`);
                     skippedCount++;
                     continue;
                 }
                 
                 const content = item.content || 
-                               item.contentSnippet || 
-                               item.summary || 
-                               item.description || 
-                               item.title || 
-                               '';
+                              item.contentSnippet || 
+                              item.summary || 
+                              item.description || 
+                              item.title || 
+                              '';
                 
-                log(`   📝 [${i+1}/${itemsToProcess.length}] Creating summary: "${item.title?.substring(0, 50)}..."`);
+                log(`    📝 [${i+1}/${itemsToProcess.length}] Creating summary: "${item.title?.substring(0, 50)}..."`);
                 const englishSummary = createEnglishSummary(content);
                 
                 const validEnglishSummary = validateSummaries(englishSummary);
                 
                 if (validEnglishSummary.length === 0) {
-                    log(`   ⚠️  No valid summary points after filtering, skipping`, 'WARN');
+                    log(`    ⚠️  No valid summary points after filtering, skipping`, 'WARN');
                     skippedCount++;
                     continue;
                 }
                 
                 const englishTitle = item.title || 'No Title';
-
-                const preWaitTime = Math.floor(Math.random() * (15000 - 5000 + 1)) + 5000;
-                log(`   ⏳ Pausing ${(preWaitTime / 1000).toFixed(0)} seconds before starting Bengali translation...`);
-                await new Promise(resolve => setTimeout(resolve, preWaitTime));
                 
-                log(`   ... Translating title ...`);
+                log(`    ... Translating title ...`);
                 let bengaliTitle = await translateToBengali(englishTitle);
                 
-                log(`   ... Translating ${validEnglishSummary.length} summary points ...`);
+                log(`    ... Translating ${validEnglishSummary.length} summary points ...`);
                 const bengaliSummaries = [];
                 for (const point of validEnglishSummary) {
                     let translated = await translateToBengali(point);
                     bengaliSummaries.push(translated);
-                    await new Promise(resolve => setTimeout(resolve, 2000));
                 }
                 
                 const validBengaliSummaries = validateSummaries(bengaliSummaries);
                 
                 if (validBengaliSummaries.length === 0) {
-                    log(`   ⚠️  No valid Bengali summaries after filtering, skipping`, 'WARN');
+                    log(`    ⚠️  No valid Bengali summaries after filtering, skipping`, 'WARN');
                     skippedCount++;
                     continue;
                 }
@@ -698,8 +683,8 @@ async function processSource(source) {
                 
                 if (result.success) {
                     processedCount++;
-                    log(`   ✅ [${i+1}/${itemsToProcess.length}] Inserted: "${bengaliTitle.substring(0, 50)}..."`);
-                    log(`   📋 Summary points: ${validBengaliSummaries.length}`);
+                    log(`    ✅ [${i+1}/${itemsToProcess.length}] Inserted: "${bengaliTitle.substring(0, 50)}..."`);
+                    log(`    📋 Summary points: ${validBengaliSummaries.length}`);
                     
                     await broadcastNewsToTelegram(newsData);
                 } else if (result.reason === 'duplicate') {
@@ -708,16 +693,14 @@ async function processSource(source) {
                     errorCount++;
                 }
                 
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                
             } catch (error) {
                 errorCount++;
-                log(`   ❌ Error processing item: ${error.message}`, 'ERROR');
+                log(`    ❌ Error processing item: ${error.message}`, 'ERROR');
                 continue;
             }
         }
         
-        log(`   📊 Source Summary: ${processedCount} inserted, ${skippedCount} skipped, ${errorCount} errors`);
+        log(`    📊 Source Summary: ${processedCount} inserted, ${skippedCount} skipped, ${errorCount} errors`);
         return processedCount;
     } catch (error) {
         log(`❌ Error fetching ${source.name}: ${error.message}`, 'ERROR');
@@ -754,10 +737,10 @@ async function cleanupOldRecords() {
                 log(`❌ Error deleting old news: ${deleteError.message}`, 'ERROR');
             } else {
                 deleted24h = oldNews.length;
-                log(`   ✅ Deleted ${deleted24h} old news items (older than 24 hours)`);
+                log(`    ✅ Deleted ${deleted24h} old news items (older than 24 hours)`);
             }
         } else {
-            log(`   ℹ️  No old news to delete`);
+            log(`    ℹ️  No old news to delete`);
         }
     } catch (error) {
         log(`❌ Exception during 24h cleanup: ${error.message}`, 'ERROR');
@@ -783,17 +766,17 @@ async function cleanupOldRecords() {
                 log(`❌ Error deleting expired jobs: ${deleteError.message}`, 'ERROR');
             } else {
                 deletedJobs = expiredJobs.length;
-                log(`   ✅ Deleted ${deletedJobs} expired job listings`);
+                log(`    ✅ Deleted ${deletedJobs} expired job listings`);
             }
         } else {
-            log(`   ℹ️  No expired jobs to delete`);
+            log(`    ℹ️  No expired jobs to delete`);
         }
     } catch (error) {
         log(`❌ Exception during jobs cleanup: ${error.message}`, 'ERROR');
     }
     
     const totalDeleted = deleted24h + deletedJobs;
-    log(`   📊 Cleanup Summary: ${totalDeleted} total records deleted`);
+    log(`    📊 Cleanup Summary: ${totalDeleted} total records deleted`);
     
     return totalDeleted;
 }
@@ -856,7 +839,7 @@ async function main() {
         }
         
         if (i < enabledSources.length - 1) {
-            log(`   ⏳ Waiting 3 seconds before next source...`);
+            log(`    ⏳ Waiting 3 seconds before next source...`);
             await new Promise(resolve => setTimeout(resolve, 3000));
         }
     }
