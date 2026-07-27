@@ -1473,7 +1473,7 @@
             <span class="subscribe-option-title" data-bn="টেলিগ্রাম বট" data-en="Telegram Bot">টেলিগ্রাম বট</span>
           </div>
           <p class="subscribe-option-desc" data-bn="আমাদের টেলিগ্রাম বট স্টার্ট করুন এবং ইনস্ট্যান্ট নিউজ নোটিফিকেশন পান।" data-en="Start our Telegram bot and get instant news notifications.">আমাদের টেলিগ্রাম বট স্টার্ট করুন এবং ইনস্ট্যান্ট নিউজ নোটিফিকেশন পান।</p>
-          <a href="https://t.me/YOUR_BOT_USERNAME" target="_blank" rel="noopener noreferrer" class="telegram-btn">
+          <a href="https://t.me/newsplause_bot" target="_blank" rel="noopener noreferrer" class="telegram-btn">
             <span class="tg-icon">✈️</span>
             <span data-bn="টেলিগ্রাম বট চালু করুন" data-en="Start Telegram Bot">টেলিগ্রাম বট চালু করুন</span>
           </a>
@@ -1540,7 +1540,7 @@
           <span class="tab-icon">❤️</span>
           <span data-bn="সবচেয়ে পছন্দের" data-en="Most Liked">সবচেয়ে পছন্দের</span>
         </button>
-        <!-- 🌟 NEW: Subscribe Button in Nav -->
+        <!-- Subscribe Button in Nav -->
         <button class="subscribe-nav-btn" id="subscribeNavBtn" aria-label="Subscribe">
           <span class="sub-icon">🔔</span>
           <span class="subscribe-btn-text" data-bn="সাবস্ক্রাইব" data-en="Subscribe">সাবস্ক্রাইব</span>
@@ -1616,11 +1616,11 @@
 
 
   <script>
- // ──────────────────────────────────────────────────────────
-// CONFIG
-// ──────────────────────────────────────────────────────────
-const SUPABASE_URL      = "https://bysrzzwcipgeeuntfkit.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ5c3J6endjaXBnZWV1bnRma2l0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3ODg2NzIsImV4cCI6MjA5NzM2NDY3Mn0.wE94_obeFw8pVjCEJEOCbRu5iti5dx-Kj-vJJUit4M4";
+    // ──────────────────────────────────────────────────────────
+    // CONFIG
+    // ──────────────────────────────────────────────────────────
+    const SUPABASE_URL      = "https://bysrzzwcipgeeuntfkit.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ5c3J6endjaXBnZWV1bnRma2l0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3ODg2NzIsImV4cCI6MjA5NzM2NDY3Mn0.wE94_obeFw8pVjCEJEOCbRu5iti5dx-Kj-vJJUit4M4";
 
     const STORAGE_KEY_CATEGORY = "newspulse_preferred_category";
     const STORAGE_KEY_PROFILE  = "newspulse_user_profile";
@@ -1630,8 +1630,8 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
     
     const VALID_CATEGORIES = ["all", "technology", "national", "sports", "jobs", "crime", "liked"];
 
-    // Telegram Bot Username — এখানে তোমার বটের ইউজারনেম বসাবে
-    const TELEGRAM_BOT_USERNAME = "newsplause_bot"; // ← এটা change করো
+    // 🌟 Telegram Bot Username — এখানে তোমার বটের ইউজারনেম
+    const TELEGRAM_BOT_USERNAME = "newsplause_bot";
 
     // ──────────────────────────────────────────────────────────
     // INIT SUPABASE
@@ -1883,8 +1883,8 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
       // Disable button during submission
       submitBtn.disabled = true;
-      const originalText = submitBtn.textContent;
-      submitBtn.textContent = currentLang === "bn" ? "পাঠানো হচ্ছে..." : "Sending...";
+      const originalText = submitBtn.innerHTML;
+      submitBtn.innerHTML = currentLang === "bn" ? "পাঠানো হচ্ছে..." : "Sending...";
 
       try {
         // 🌟 Save to Supabase subscribers table
@@ -1893,13 +1893,17 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
           .insert([{ email: email }]);
 
         if (error) {
-          // Duplicate email error
+          // Duplicate email (code 23505) or other error
           if (error.code === '23505') {
+            // Already subscribed
             successMsg.classList.add("show");
+            console.log('[Subscribe] Email already exists:', email);
           } else {
             console.error('[Subscribe] Supabase error:', error.message);
-            errorMsg.querySelector('.subscribe-error-text').textContent = 
-              currentLang === "bn" ? "কিছু ভুল হয়েছে, আবার চেষ্টা করুন" : "Something went wrong, please try again";
+            const errorSpan = errorMsg.querySelector('.subscribe-error-text');
+            if (errorSpan) {
+              errorSpan.textContent = currentLang === "bn" ? "কিছু ভুল হয়েছে, আবার চেষ্টা করুন" : "Something went wrong, please try again";
+            }
             errorMsg.classList.add("show");
           }
         } else {
@@ -1909,12 +1913,14 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
         }
       } catch (err) {
         console.error('[Subscribe] Exception:', err);
-        errorMsg.querySelector('.subscribe-error-text').textContent = 
-          currentLang === "bn" ? "নেটওয়ার্ক সমস্যা, আবার চেষ্টা করুন" : "Network issue, please try again";
+        const errorSpan = errorMsg.querySelector('.subscribe-error-text');
+        if (errorSpan) {
+          errorSpan.textContent = currentLang === "bn" ? "নেটওয়ার্ক সমস্যা, আবার চেষ্টা করুন" : "Network issue, please try again";
+        }
         errorMsg.classList.add("show");
       } finally {
         submitBtn.disabled = false;
-        submitBtn.textContent = originalText;
+        submitBtn.innerHTML = originalText;
       }
     }
 
@@ -1978,15 +1984,6 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
       } catch(e) {}
       return "bn";
     }
-
-    document.getElementById("langToggle").addEventListener("click", (e) => {
-      const option = e.target.closest(".lang-option");
-      if (!option) return;
-      const lang = option.dataset.lang;
-      if (lang === currentLang) return;
-      applyLanguage(lang);
-      renderAllSections();
-    });
 
     // ──────────────────────────────────────────────────────────
     // CATEGORY NAVIGATION VISIBILITY
@@ -2161,25 +2158,6 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
         badge.onclick = null;
       }
     }
-
-    document.getElementById("categoryGrid").addEventListener("click", (e) => {
-      const checkbox = e.target.closest(".category-checkbox");
-      if (!checkbox) return;
-
-      const input = checkbox.querySelector("input[type='checkbox']");
-      input.checked = !input.checked;
-      
-      if (input.checked) {
-        checkbox.classList.add("selected");
-      } else {
-        checkbox.classList.remove("selected");
-      }
-
-      const anyChecked = document.querySelectorAll("#categoryGrid input[type='checkbox']:checked").length > 0;
-      if (anyChecked) {
-        document.getElementById("categoryError").classList.remove("show");
-      }
-    });
 
     // ──────────────────────────────────────────────────────────
     // CATEGORY PREFERENCE SYSTEM
@@ -2688,18 +2666,22 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
       completeOnboarding();
     });
 
+    // Category nav + Subscribe button click handler
     document.getElementById("categoryNav").addEventListener("click", (e) => {
+      // Check if subscribe button was clicked
+      if (e.target.closest("#subscribeNavBtn")) {
+        e.preventDefault();
+        openSubscribeModal();
+        return;
+      }
+      
+      // Otherwise handle tab button click
       const btn = e.target.closest(".tab-btn");
       if (!btn) return;
       updateCategory(btn.dataset.category);
     });
 
-    // 🌟 Subscribe Modal Event Listeners
-    document.getElementById("subscribeNavBtn").addEventListener("click", (e) => {
-      e.preventDefault();
-      openSubscribeModal();
-    });
-
+    // Subscribe Modal Event Listeners
     document.getElementById("subscribeCloseBtn").addEventListener("click", () => {
       closeSubscribeModal();
     });
@@ -2728,6 +2710,36 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
           closeSubscribeModal();
         }
       }
+    });
+
+    // Category checkbox toggle
+    document.getElementById("categoryGrid").addEventListener("click", (e) => {
+      const checkbox = e.target.closest(".category-checkbox");
+      if (!checkbox) return;
+
+      const input = checkbox.querySelector("input[type='checkbox']");
+      input.checked = !input.checked;
+      
+      if (input.checked) {
+        checkbox.classList.add("selected");
+      } else {
+        checkbox.classList.remove("selected");
+      }
+
+      const anyChecked = document.querySelectorAll("#categoryGrid input[type='checkbox']:checked").length > 0;
+      if (anyChecked) {
+        document.getElementById("categoryError").classList.remove("show");
+      }
+    });
+
+    // Language toggle
+    document.getElementById("langToggle").addEventListener("click", (e) => {
+      const option = e.target.closest(".lang-option");
+      if (!option) return;
+      const lang = option.dataset.lang;
+      if (lang === currentLang) return;
+      applyLanguage(lang);
+      renderAllSections();
     });
 
     // ──────────────────────────────────────────────────────────
