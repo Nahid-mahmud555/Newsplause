@@ -349,7 +349,7 @@ async function translateToBengali(text) {
             log(`⚠️ Translation API Error/Limit Exceeded (Attempt ${attempt}): ${error.message}`, 'WARN');
             log(`⏸️ Rate Limit Hit! Resting for 5 minutes (300 seconds) before retrying this item...`, 'WARN');
             
-            // ৫ মিনিট ওয়েট (৩০০,০০০ মি.সে.)
+            // ৫ মিনিট ওয়েট (৩০০,০০০ মি.সে.)
             await new Promise(resolve => setTimeout(resolve, 5 * 60 * 1000));
             log(`🔄 Resuming translation attempt ${attempt + 1}...`, 'INFO');
         }
