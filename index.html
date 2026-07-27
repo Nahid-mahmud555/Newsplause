@@ -40,6 +40,9 @@
       --dislike-color:    #6366f1;
       --dislike-color-glow: rgba(99, 102, 241, 0.35);
 
+      --telegram-color:   #0088cc;
+      --telegram-glow:    rgba(0, 136, 204, 0.35);
+
       --cat-tech-bg:  rgba(139,92,246,0.12); --cat-tech-text: #c4b5fd;  --cat-tech-ring: rgba(139,92,246,0.25);
       --cat-nat-bg:   rgba(16,185,129,0.12); --cat-nat-text:  #6ee7b7;  --cat-nat-ring:  rgba(16,185,129,0.25);
       --cat-sports-bg:rgba(245,158,11,0.12); --cat-sports-text:#fcd34d; --cat-sports-ring:rgba(245,158,11,0.25);
@@ -93,7 +96,14 @@
     body.lang-en .reaction-count,
     body.lang-en .liked-section-title,
     body.lang-en .disliked-section-title,
-    body.lang-en .like-count-badge {
+    body.lang-en .like-count-badge,
+    body.lang-en .subscribe-btn-text,
+    body.lang-en .subscribe-modal-title,
+    body.lang-en .subscribe-modal-desc,
+    body.lang-en .subscribe-option-title,
+    body.lang-en .subscribe-option-desc,
+    body.lang-en .subscribe-input,
+    body.lang-en .subscribe-success-text {
       font-family: "Inter", sans-serif;
     }
 
@@ -435,6 +445,302 @@
 
     .error-message.show {
       display: block;
+    }
+
+    /* ═══════════════════════════════════════════════
+       SUBSCRIBE BUTTON IN HEADER
+    ═══════════════════════════════════════════════ */
+    .subscribe-nav-btn {
+      flex-shrink: 0;
+      display: inline-flex !important;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 16px;
+      border-radius: var(--radius-pill);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--telegram-color);
+      background: rgba(0, 136, 204, 0.1);
+      color: #7dd3fc;
+      transition: all 0.25s ease;
+      font-family: "Noto Sans Bengali", "Hind Siliguri", sans-serif;
+      white-space: nowrap;
+    }
+
+    .subscribe-nav-btn:hover {
+      background: var(--telegram-color);
+      color: #ffffff;
+      box-shadow: 0 0 20px var(--telegram-glow);
+      transform: translateY(-1px);
+    }
+
+    .subscribe-nav-btn .sub-icon {
+      font-size: 15px;
+      animation: bellRing 2s ease-in-out infinite;
+    }
+
+    @keyframes bellRing {
+      0%, 100% { transform: rotate(0); }
+      5% { transform: rotate(15deg); }
+      10% { transform: rotate(-15deg); }
+      15% { transform: rotate(10deg); }
+      20% { transform: rotate(-10deg); }
+      25% { transform: rotate(0); }
+    }
+
+    /* ═══════════════════════════════════════════════
+       SUBSCRIBE MODAL OVERLAY
+    ═══════════════════════════════════════════════ */
+    .subscribe-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(2, 8, 23, 0.95);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      z-index: 1001;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.3s ease;
+      padding: 20px;
+    }
+
+    .subscribe-overlay.active {
+      display: flex;
+    }
+
+    .subscribe-modal {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 36px 28px;
+      max-width: 480px;
+      width: 100%;
+      animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 25px 80px rgba(0,0,0,0.6), 0 0 0 1px var(--border);
+      position: relative;
+    }
+
+    .subscribe-modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      line-height: 1;
+    }
+
+    .subscribe-modal-close:hover {
+      border-color: var(--border-hover);
+      color: var(--text-primary);
+      background: var(--bg-card-hover);
+    }
+
+    .subscribe-modal-icon {
+      font-size: 40px;
+      text-align: center;
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .subscribe-modal-title {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--text-primary);
+      text-align: center;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+
+    .subscribe-modal-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+      text-align: center;
+      margin-bottom: 28px;
+      line-height: 1.7;
+    }
+
+    /* Subscribe Options */
+    .subscribe-options {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .subscribe-option {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      transition: all 0.25s ease;
+    }
+
+    .subscribe-option:hover {
+      border-color: var(--border-hover);
+    }
+
+    .subscribe-option-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .subscribe-option-icon {
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .subscribe-option-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .subscribe-option-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+      line-height: 1.6;
+    }
+
+    /* Email Input */
+    .subscribe-input-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .subscribe-input {
+      flex: 1;
+      padding: 10px 14px;
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-pill);
+      color: var(--text-primary);
+      font-size: 13px;
+      font-family: "Inter", sans-serif;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .subscribe-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+
+    .subscribe-input::placeholder {
+      color: var(--text-faint);
+    }
+
+    .subscribe-submit-btn {
+      padding: 10px 18px;
+      border-radius: var(--radius-pill);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #ffffff;
+      transition: all 0.25s ease;
+      white-space: nowrap;
+      font-family: "Noto Sans Bengali", "Hind Siliguri", sans-serif;
+    }
+
+    .subscribe-submit-btn:hover {
+      box-shadow: 0 0 20px var(--accent-glow);
+      transform: translateY(-1px);
+    }
+
+    .subscribe-submit-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Telegram Button */
+    .telegram-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 11px 18px;
+      border-radius: var(--radius-pill);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      background: var(--telegram-color);
+      color: #ffffff;
+      transition: all 0.25s ease;
+      text-decoration: none;
+      font-family: "Noto Sans Bengali", "Hind Siliguri", sans-serif;
+    }
+
+    .telegram-btn:hover {
+      box-shadow: 0 0 24px var(--telegram-glow);
+      transform: translateY(-1px);
+    }
+
+    .telegram-btn .tg-icon {
+      font-size: 18px;
+    }
+
+    /* Success Message */
+    .subscribe-success {
+      display: none;
+      text-align: center;
+      padding: 12px 16px;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 12px;
+      margin-top: 12px;
+      animation: fadeInUp 0.3s ease both;
+    }
+
+    .subscribe-success.show {
+      display: block;
+    }
+
+    .subscribe-success-text {
+      font-size: 13px;
+      color: #6ee7b7;
+      font-weight: 500;
+    }
+
+    .subscribe-error {
+      display: none;
+      text-align: center;
+      padding: 10px 14px;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 12px;
+      margin-top: 12px;
+      animation: fadeInUp 0.3s ease both;
+    }
+
+    .subscribe-error.show {
+      display: block;
+    }
+
+    .subscribe-error-text {
+      font-size: 12px;
+      color: #fca5a5;
+      font-weight: 500;
     }
 
     /* ═══════════════════════════════════════════════
@@ -1021,6 +1327,18 @@
       .reaction-row {
         gap: 12px;
       }
+      .subscribe-input-row {
+        flex-direction: column;
+      }
+      .subscribe-submit-btn {
+        width: 100%;
+      }
+      .subscribe-nav-btn .subscribe-btn-text {
+        display: none;
+      }
+      .subscribe-nav-btn {
+        padding: 6px 10px;
+      }
     }
   </style>
 </head>
@@ -1053,8 +1371,8 @@
             <span data-bn="আপনার পছন্দের ক্যাটাগরি" data-en="Your preferred categories">আপনার পছন্দের ক্যাটাগরি</span>
           </li>
           <li class="feature-item">
-            <span class="feature-icon">❤️</span>
-            <span data-bn="লাইক ও ডিসলাইক করে ফিড কাস্টমাইজ করুন" data-en="Like & dislike to customize your feed">লাইক ও ডিসলাইক করে ফিড কাস্টমাইজ করুন</span>
+            <span class="feature-icon">🔔</span>
+            <span data-bn="ইমেইল বা টেলিগ্রামে সাবস্ক্রাইব করুন" data-en="Subscribe via Email or Telegram">ইমেইল বা টেলিগ্রামে সাবস্ক্রাইব করুন</span>
           </li>
         </ul>
 
@@ -1118,6 +1436,53 @@
   </div>
 
   <!-- ══════════════════════════════════════════
+       SUBSCRIBE MODAL
+  ══════════════════════════════════════════ -->
+  <div class="subscribe-overlay" id="subscribeOverlay">
+    <div class="subscribe-modal">
+      <button class="subscribe-modal-close" id="subscribeCloseBtn" aria-label="Close">✕</button>
+      
+      <span class="subscribe-modal-icon">🔔</span>
+      <h2 class="subscribe-modal-title" data-bn="সাবস্ক্রাইব করে আপডেট পান" data-en="Subscribe for Updates">সাবস্ক্রাইব করে আপডেট পান</h2>
+      <p class="subscribe-modal-desc" data-bn="ইমেইল অথবা টেলিগ্রাম বটের মাধ্যমে প্রতিদিনের গুরুত্বপূর্ণ সংবাদ সরাসরি পান।" data-en="Get daily important news directly via email or Telegram bot.">ইমেইল অথবা টেলিগ্রাম বটের মাধ্যমে প্রতিদিনের গুরুত্বপূর্ণ সংবাদ সরাসরি পান।</p>
+
+      <div class="subscribe-options">
+        <!-- Email Option -->
+        <div class="subscribe-option" id="emailOption">
+          <div class="subscribe-option-header">
+            <span class="subscribe-option-icon">📧</span>
+            <span class="subscribe-option-title" data-bn="ইমেইল সাবস্ক্রিপশন" data-en="Email Subscription">ইমেইল সাবস্ক্রিপশন</span>
+          </div>
+          <p class="subscribe-option-desc" data-bn="আপনার ইমেইল দিন এবং প্রতিদিন সকালে সংবাদ আপডেট পান।" data-en="Enter your email and receive daily news updates every morning.">আপনার ইমেইল দিন এবং প্রতিদিন সকালে সংবাদ আপডেট পান।</p>
+          <div class="subscribe-input-row">
+            <input type="email" class="subscribe-input" id="subscribeEmailInput" placeholder="your@email.com" autocomplete="email" />
+            <button class="subscribe-submit-btn" id="subscribeEmailBtn" data-bn="সাবস্ক্রাইব" data-en="Subscribe">সাবস্ক্রাইব</button>
+          </div>
+          <div class="subscribe-success" id="emailSuccess">
+            <span class="subscribe-success-text" data-bn="✅ সাবস্ক্রিপশন সফল হয়েছে! ইমেইল চেক করুন।" data-en="✅ Subscription successful! Check your email.">✅ সাবস্ক্রিপশন সফল হয়েছে! ইমেইল চেক করুন।</span>
+          </div>
+          <div class="subscribe-error" id="emailError">
+            <span class="subscribe-error-text" data-bn="দয়া করে একটি বৈধ ইমেইল লিখুন" data-en="Please enter a valid email">দয়া করে একটি বৈধ ইমেইল লিখুন</span>
+          </div>
+        </div>
+
+        <!-- Telegram Option -->
+        <div class="subscribe-option" id="telegramOption">
+          <div class="subscribe-option-header">
+            <span class="subscribe-option-icon">📱</span>
+            <span class="subscribe-option-title" data-bn="টেলিগ্রাম বট" data-en="Telegram Bot">টেলিগ্রাম বট</span>
+          </div>
+          <p class="subscribe-option-desc" data-bn="আমাদের টেলিগ্রাম বট স্টার্ট করুন এবং ইনস্ট্যান্ট নিউজ নোটিফিকেশন পান।" data-en="Start our Telegram bot and get instant news notifications.">আমাদের টেলিগ্রাম বট স্টার্ট করুন এবং ইনস্ট্যান্ট নিউজ নোটিফিকেশন পান।</p>
+          <a href="https://t.me/YOUR_BOT_USERNAME" target="_blank" rel="noopener noreferrer" class="telegram-btn">
+            <span class="tg-icon">✈️</span>
+            <span data-bn="টেলিগ্রাম বট চালু করুন" data-en="Start Telegram Bot">টেলিগ্রাম বট চালু করুন</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
        HEADER
   ══════════════════════════════════════════ -->
   <header class="header">
@@ -1170,10 +1535,15 @@
           <span class="tab-icon">○</span>
           <span data-bn="বিশ্ব" data-en="World">বিশ্ব</span>
         </button>
-        <!-- 🌟 Liked Tab -->
+        <!-- Liked Tab -->
         <button class="tab-btn" data-category="liked">
           <span class="tab-icon">❤️</span>
           <span data-bn="সবচেয়ে পছন্দের" data-en="Most Liked">সবচেয়ে পছন্দের</span>
+        </button>
+        <!-- 🌟 NEW: Subscribe Button in Nav -->
+        <button class="subscribe-nav-btn" id="subscribeNavBtn" aria-label="Subscribe">
+          <span class="sub-icon">🔔</span>
+          <span class="subscribe-btn-text" data-bn="সাবস্ক্রাইব" data-en="Subscribe">সাবস্ক্রাইব</span>
         </button>
       </nav>
     </div>
@@ -1246,19 +1616,22 @@
 
 
   <script>
-    // ──────────────────────────────────────────────────────────
-    // CONFIG
-    // ──────────────────────────────────────────────────────────
-    const SUPABASE_URL      = "https://bysrzzwcipgeeuntfkit.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_UrM7qtGcB_vkHuoF5BlnJg_4R8WfPY2";
+ // ──────────────────────────────────────────────────────────
+// CONFIG
+// ──────────────────────────────────────────────────────────
+const SUPABASE_URL      = "https://bysrzzwcipgeeuntfkit.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ5c3J6endjaXBnZWV1bnRma2l0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3ODg2NzIsImV4cCI6MjA5NzM2NDY3Mn0.wE94_obeFw8pVjCEJEOCbRu5iti5dx-Kj-vJJUit4M4";
 
     const STORAGE_KEY_CATEGORY = "newspulse_preferred_category";
     const STORAGE_KEY_PROFILE  = "newspulse_user_profile";
     const STORAGE_KEY_LANG     = "newspulse_language";
-    const STORAGE_KEY_REACTIONS = "newspulse_reactions"; // { [articleId]: 'liked' | 'disliked' | null }
-    const STORAGE_KEY_LIKED_IDS = "news_liked_ids"; // array of article IDs user liked
+    const STORAGE_KEY_REACTIONS = "newspulse_reactions";
+    const STORAGE_KEY_LIKED_IDS = "news_liked_ids";
     
     const VALID_CATEGORIES = ["all", "technology", "national", "sports", "jobs", "crime", "liked"];
+
+    // Telegram Bot Username — এখানে তোমার বটের ইউজারনেম বসাবে
+    const TELEGRAM_BOT_USERNAME = "newsplause_bot"; // ← এটা change করো
 
     // ──────────────────────────────────────────────────────────
     // INIT SUPABASE
@@ -1273,10 +1646,10 @@
     let realtimeChannel = null;
     let userProfile = null;
     let currentLang = "bn";
-    let reactionsMap = {}; // { [articleId]: 'liked' | 'disliked' | null }
-    let likedIds = []; // array of article IDs user liked (local)
-    let allArticles = []; // current fetched articles cache
-    let globalLikeCounts = {}; // { [articleId]: number } - fetched from Supabase
+    let reactionsMap = {};
+    let likedIds = [];
+    let allArticles = [];
+    let globalLikeCounts = {};
 
     // ──────────────────────────────────────────────────────────
     // REACTIONS MANAGEMENT
@@ -1316,31 +1689,23 @@
       }
     }
 
-    // 🌟 handleLike with TOGGLE logic
-    // আগে already liked থাকলে আবার click করলে unlike হয়ে যাবে
     async function handleLike(articleId, cardElement) {
-      // Check current state
       const currentReaction = getReaction(articleId);
       
-      // 🌟 TOGGLE: If already liked, then unlike (remove reaction)
       if (currentReaction === 'liked') {
         console.log('[Reaction] 🔄 Toggle OFF like for:', articleId);
         
-        // Remove from likedIds
         likedIds = likedIds.filter(id => id !== articleId);
         localStorage.setItem(STORAGE_KEY_LIKED_IDS, JSON.stringify(likedIds));
         
-        // Remove reaction from map
         delete reactionsMap[articleId];
         saveReactions();
         
-        // Remove UI classes
         if (cardElement) {
           const likeBtn = cardElement.querySelector('.like-btn');
           if (likeBtn) likeBtn.classList.remove('liked');
         }
         
-        // Update global count optimistically
         if (globalLikeCounts[articleId] && globalLikeCounts[articleId] > 0) {
           globalLikeCounts[articleId]--;
         }
@@ -1348,22 +1713,18 @@
         return;
       }
       
-      // 🌟 If disliked previously, remove dislike first then add like
       if (currentReaction === 'disliked') {
         console.log('[Reaction] 🔄 Switching from dislike to like for:', articleId);
       }
       
-      // 🌟 ADD LIKE: Local state update
       if (!likedIds.includes(articleId)) {
         likedIds.push(articleId);
         localStorage.setItem(STORAGE_KEY_LIKED_IDS, JSON.stringify(likedIds));
       }
       
-      // Set reaction in map
       reactionsMap[articleId] = 'liked';
       saveReactions();
       
-      // Card UI class update
       if (cardElement) {
         const likeBtn = cardElement.querySelector('.like-btn');
         const dislikeBtn = cardElement.querySelector('.dislike-btn');
@@ -1371,7 +1732,6 @@
         if (dislikeBtn) dislikeBtn.classList.remove('disliked');
       }
 
-      // Push to Supabase database (global like)
       try {
         const { error } = await db
           .from('article_likes')
@@ -1381,7 +1741,6 @@
           console.error('[Supabase] Error saving global like:', error.message);
         } else {
           console.log('[Supabase] ✅ Global like saved for:', articleId);
-          // Update local count optimistically
           if (globalLikeCounts[articleId]) {
             globalLikeCounts[articleId]++;
           } else {
@@ -1393,21 +1752,15 @@
       }
     }
 
-    // 🌟 handleDislike with TOGGLE logic
-    // আগে already disliked থাকলে আবার click করলে undislike হয়ে যাবে
     async function handleDislike(articleId, cardElement) {
-      // Check current state
       const currentReaction = getReaction(articleId);
       
-      // 🌟 TOGGLE: If already disliked, then remove dislike
       if (currentReaction === 'disliked') {
         console.log('[Reaction] 🔄 Toggle OFF dislike for:', articleId);
         
-        // Remove reaction from map
         delete reactionsMap[articleId];
         saveReactions();
         
-        // Remove UI classes
         if (cardElement) {
           const dislikeBtn = cardElement.querySelector('.dislike-btn');
           if (dislikeBtn) dislikeBtn.classList.remove('disliked');
@@ -1416,25 +1769,20 @@
         return;
       }
       
-      // 🌟 If liked previously, remove like first
       if (currentReaction === 'liked') {
         console.log('[Reaction] 🔄 Switching from like to dislike for:', articleId);
         
-        // Remove from likedIds
         likedIds = likedIds.filter(id => id !== articleId);
         localStorage.setItem(STORAGE_KEY_LIKED_IDS, JSON.stringify(likedIds));
         
-        // Update global count
         if (globalLikeCounts[articleId] && globalLikeCounts[articleId] > 0) {
           globalLikeCounts[articleId]--;
         }
       }
       
-      // 🌟 ADD DISLIKE: Set reaction in map
       reactionsMap[articleId] = 'disliked';
       saveReactions();
       
-      // Card UI class update
       if (cardElement) {
         const likeBtn = cardElement.querySelector('.like-btn');
         const dislikeBtn = cardElement.querySelector('.dislike-btn');
@@ -1446,7 +1794,6 @@
     }
 
     function setReaction(articleId, reactionType) {
-      // Find the card element
       const cardElement = document.querySelector(`[data-article-id="${articleId}"]`);
       
       if (reactionType === 'liked') {
@@ -1455,7 +1802,6 @@
         handleDislike(articleId, cardElement);
       }
       
-      // Re-render after a short delay to show animations first
       setTimeout(() => {
         renderAllSections();
       }, 300);
@@ -1465,7 +1811,6 @@
       return reactionsMap[articleId] || null;
     }
 
-    // Fetch global like counts from Supabase
     async function fetchGlobalLikeCounts(articleIds) {
       if (!articleIds || articleIds.length === 0) return;
       
@@ -1492,6 +1837,84 @@
         console.log('[Supabase] 📊 Global like counts:', globalLikeCounts);
       } catch (err) {
         console.error('[Supabase] Exception fetching like counts:', err);
+      }
+    }
+
+    // ──────────────────────────────────────────────────────────
+    // SUBSCRIBE MODAL LOGIC
+    // ──────────────────────────────────────────────────────────
+    function openSubscribeModal() {
+      const overlay = document.getElementById("subscribeOverlay");
+      overlay.classList.add("active");
+      document.body.style.overflow = "hidden";
+      
+      // Reset form state
+      document.getElementById("subscribeEmailInput").value = "";
+      document.getElementById("emailSuccess").classList.remove("show");
+      document.getElementById("emailError").classList.remove("show");
+    }
+
+    function closeSubscribeModal() {
+      const overlay = document.getElementById("subscribeOverlay");
+      overlay.classList.remove("active");
+      document.body.style.overflow = "";
+    }
+
+    function validateEmail(email) {
+      const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return re.test(email);
+    }
+
+    async function handleEmailSubscribe() {
+      const emailInput = document.getElementById("subscribeEmailInput");
+      const email = emailInput.value.trim();
+      const submitBtn = document.getElementById("subscribeEmailBtn");
+      const successMsg = document.getElementById("emailSuccess");
+      const errorMsg = document.getElementById("emailError");
+
+      // Hide previous messages
+      successMsg.classList.remove("show");
+      errorMsg.classList.remove("show");
+
+      if (!email || !validateEmail(email)) {
+        errorMsg.classList.add("show");
+        return;
+      }
+
+      // Disable button during submission
+      submitBtn.disabled = true;
+      const originalText = submitBtn.textContent;
+      submitBtn.textContent = currentLang === "bn" ? "পাঠানো হচ্ছে..." : "Sending...";
+
+      try {
+        // 🌟 Save to Supabase subscribers table
+        const { error } = await db
+          .from('subscribers')
+          .insert([{ email: email }]);
+
+        if (error) {
+          // Duplicate email error
+          if (error.code === '23505') {
+            successMsg.classList.add("show");
+          } else {
+            console.error('[Subscribe] Supabase error:', error.message);
+            errorMsg.querySelector('.subscribe-error-text').textContent = 
+              currentLang === "bn" ? "কিছু ভুল হয়েছে, আবার চেষ্টা করুন" : "Something went wrong, please try again";
+            errorMsg.classList.add("show");
+          }
+        } else {
+          console.log('[Subscribe] ✅ Email saved:', email);
+          successMsg.classList.add("show");
+          emailInput.value = "";
+        }
+      } catch (err) {
+        console.error('[Subscribe] Exception:', err);
+        errorMsg.querySelector('.subscribe-error-text').textContent = 
+          currentLang === "bn" ? "নেটওয়ার্ক সমস্যা, আবার চেষ্টা করুন" : "Network issue, please try again";
+        errorMsg.classList.add("show");
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
       }
     }
 
@@ -1556,7 +1979,6 @@
       return "bn";
     }
 
-    // Language toggle click
     document.getElementById("langToggle").addEventListener("click", (e) => {
       const option = e.target.closest(".lang-option");
       if (!option) return;
@@ -1740,7 +2162,6 @@
       }
     }
 
-    // Category checkbox toggle
     document.getElementById("categoryGrid").addEventListener("click", (e) => {
       const checkbox = e.target.closest(".category-checkbox");
       if (!checkbox) return;
@@ -1904,9 +2325,6 @@
       `;
     }
 
-    // 🌟 UPDATED: builds the bengali/english title + summary bullets,
-    // and falls back gracefully if bengaliSummaries / englishSummaries is empty
-    // (matches the "no summary found" fallback requested for the news card)
     function renderCard(article, index) {
       let title, summaries;
       
@@ -1934,7 +2352,6 @@
       const unknownText = currentLang === "bn" ? "অজানা" : "Unknown";
       const sourceName = article.source_name || unknownText;
 
-      // 🌟 জব ক্যাটাগরির জন্য ডেডলাইন ব্যাজ, অন্যথায় সোর্স নেম দেখানো হয়
       const deadlineHtml = (article.category === "jobs" && article.deadline)
         ? `<span class="deadline-label">${deadlineText}: ${formatDeadline(article.deadline)}</span>`
         : `<span class="source-label">${sourceText}: <span class="source-name">${escapeHtml(sourceName)}</span></span>`;
@@ -1981,7 +2398,6 @@
     // RENDER ALL SECTIONS (LIKED, MAIN, DISLIKED)
     // ──────────────────────────────────────────────────────────
     function renderAllSections() {
-      // If on "liked" tab, show global liked articles
       if (activeCategory === "liked") {
         document.getElementById("likedSection").style.display = "none";
         document.getElementById("dislikedSection").style.display = "none";
@@ -1999,7 +2415,6 @@
         return;
       }
 
-      // Separate articles based on reactions
       const likedArticles = [];
       const dislikedArticles = [];
       const neutralArticles = [];
@@ -2017,7 +2432,6 @@
         }
       });
 
-      // Render Liked Section
       const likedSection = document.getElementById("likedSection");
       const likedGrid = document.getElementById("likedGrid");
       if (likedArticles.length > 0) {
@@ -2030,7 +2444,6 @@
         likedGrid.innerHTML = "";
       }
 
-      // Render Main (Neutral) Grid
       const newsGrid = document.getElementById("newsGrid");
       if (neutralArticles.length > 0) {
         newsGrid.innerHTML = neutralArticles.map(({ article, index, articleId }) => 
@@ -2040,7 +2453,6 @@
         newsGrid.innerHTML = renderEmpty(activeCategory);
       }
 
-      // Render Disliked Section
       const dislikedSection = document.getElementById("dislikedSection");
       const dislikedGrid = document.getElementById("dislikedGrid");
       if (dislikedArticles.length > 0) {
@@ -2087,7 +2499,6 @@
           
           console.log("[Reaction] Clicked:", reactionType, "for article:", articleId);
           
-          // 🌟 This now handles TOGGLE automatically
           setReaction(articleId, reactionType);
         });
       });
@@ -2107,7 +2518,6 @@
       document.getElementById("dislikedSection").style.display = "none";
 
       try {
-        // Handle "liked" category - fetch most liked articles globally
         if (category === "liked") {
           const { data: likeData, error: likeError } = await db
             .from('article_likes')
@@ -2167,7 +2577,6 @@
           return;
         }
         
-        // Normal category fetch
         let query = db.from("news_feed").select("*", { count: "exact" }).order("created_at", { ascending: false }).limit(50);
         if (category !== "all") query = query.eq("category", category);
 
@@ -2283,6 +2692,42 @@
       const btn = e.target.closest(".tab-btn");
       if (!btn) return;
       updateCategory(btn.dataset.category);
+    });
+
+    // 🌟 Subscribe Modal Event Listeners
+    document.getElementById("subscribeNavBtn").addEventListener("click", (e) => {
+      e.preventDefault();
+      openSubscribeModal();
+    });
+
+    document.getElementById("subscribeCloseBtn").addEventListener("click", () => {
+      closeSubscribeModal();
+    });
+
+    document.getElementById("subscribeOverlay").addEventListener("click", (e) => {
+      if (e.target === document.getElementById("subscribeOverlay")) {
+        closeSubscribeModal();
+      }
+    });
+
+    document.getElementById("subscribeEmailBtn").addEventListener("click", () => {
+      handleEmailSubscribe();
+    });
+
+    document.getElementById("subscribeEmailInput").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        handleEmailSubscribe();
+      }
+    });
+
+    // ESC key to close modal
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        const overlay = document.getElementById("subscribeOverlay");
+        if (overlay.classList.contains("active")) {
+          closeSubscribeModal();
+        }
+      }
     });
 
     // ──────────────────────────────────────────────────────────
