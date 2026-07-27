@@ -419,7 +419,6 @@ async function translateToBengali(text) {
     }
 
     try {
-        // Wrap translation with a strict 4-second timeout using AbortController
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 4000);
 
@@ -651,7 +650,7 @@ async function processSource(source) {
         return processedCount;
     } catch (error) {
         log(`❌ Error fetching ${source.name}: ${error.message}`, 'WARN');
-        return 0; // Return 0 instead of -1 to prevent failure block
+        return 0;
     }
 }
 
