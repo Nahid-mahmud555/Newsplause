@@ -1,26 +1,28 @@
 name: Manual News Fetch
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: # GitHub Actions ড্যাশবোর্ড থেকে এক ক্লিকে ম্যানুয়ালি রান করার জন্য
 
 jobs:
   fetch-news-job:
     runs-on: ubuntu-latest
+    timeout-minutes: 360 # অনুবাদ এবং এপিআই পজ হ্যান্ডেল করার জন্য টাইমআউট
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '22' # এখানে ২০ থেকে ২২ করে দিলাম
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
 
-    - name: Install dependencies
-      run: npm install
+      - name: Install dependencies
+        run: npm ci || npm install
 
-    - name: Run Fetch Script
-      env:
-        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-        SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-      run: node fetch-news.js
+      - name: Run Fetch Script
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node fetch-news.js
