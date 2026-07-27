@@ -1,7 +1,7 @@
 name: Manual News Fetch
 
 on:
-  workflow_dispatch: # GitHub Actions ড্যাশবোর্ড থেকে এক ক্লিকে ম্যানুয়ালি রান করার জন্য
+  workflow_dispatch: # GitHub Actions ড্যাশবোর্ড থেকে এক ক্লিকে ম্যানুয়ালি রান করার জন্য
 
 jobs:
   fetch-news-job:
@@ -25,4 +25,8 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASS: ${{ secrets.GMAIL_APP_PASS }}
         run: node fetch-news.js
