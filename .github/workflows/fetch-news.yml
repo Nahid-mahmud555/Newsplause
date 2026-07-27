@@ -2,14 +2,14 @@ name: NewsPulse - Auto Fetch News
 
 on:
   schedule:
-    # প্রতি ৪ ঘণ্টা পর পর অটোমেটিক রান হবে (UTC সময় অনুযায়ী)
+    # প্রতি ৪ ঘণ্টা পর পর অটোমেটিক রান হবে (UTC সময় অনুযায়ী)
     - cron: '0 */4 * * *'
-  workflow_dispatch: # GitHub Actions থেকে ম্যানুয়ালি রান করার জন্য
+  workflow_dispatch: # GitHub Actions থেকে ম্যানুয়ালি রান করার জন্য
 
 jobs:
   fetch-news-job:
     runs-on: ubuntu-latest
-    timeout-minutes: 360 # অনুবাদ পজ এবং রেস্টের জন্য পর্যাপ্ত সময়
+    timeout-minutes: 360 # অনুবাদ পজ এবং রেস্টের জন্য পর্যাপ্ত সময়
 
     steps:
       - name: Checkout repository
@@ -28,4 +28,7 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
         run: node fetch-news.js
