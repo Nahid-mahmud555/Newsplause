@@ -2,27 +2,30 @@ name: NewsPulse - Auto Fetch News
 
 on:
   schedule:
+    # প্রতি ৪ ঘণ্টা পর পর অটোমেটিক রান হবে (UTC সময় অনুযায়ী)
     - cron: '0 */4 * * *'
-  workflow_dispatch:
+  workflow_dispatch: # GitHub Actions থেকে ম্যানুয়ালি রান করার জন্য
 
 jobs:
   fetch-news-job:
     runs-on: ubuntu-latest
+    timeout-minutes: 360 # অনুবাদ পজ এবং রেস্টের জন্য পর্যাপ্ত সময়
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '22'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
 
-    - name: Install dependencies
-      run: npm install
+      - name: Install dependencies
+        run: npm ci || npm install
 
-    - name: Run Fetch Script
-      env:
-        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-        SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-      run: node fetch-news.js
+      - name: Run Fetch Script
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node fetch-news.js
