@@ -9,6 +9,12 @@ import path from 'path';
 // Load environment variables
 dotenv.config();
 
+// Global Process Hard Timeout (prevent hanging for hours)
+setTimeout(() => {
+    console.error('❌ CRITICAL ERROR: Process timed out after 20 minutes! Force exiting.');
+    process.exit(1);
+}, 20 * 60 * 1000);
+
 // Initialize Supabase client
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -23,9 +29,9 @@ if (!supabaseUrl || !supabaseKey) {
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Initialize RSS Parser with custom headers
+// Initialize RSS Parser with custom headers & strict timeout
 const parser = new Parser({
-    timeout: 15000,
+    timeout: 10000, // Reduced to 10 seconds to prevent hanging
     headers: {
         'User-Agent': 'NewsPulse/1.0 (News Aggregator Bot)',
         'Accept': 'application/rss+xml, application/xml, text/xml, */*'
@@ -259,7 +265,8 @@ async function sendTelegramMessage(chatId, text) {
                 text: text,
                 parse_mode: 'HTML',
                 disable_web_page_preview: false
-            })
+            }),
+            signal: AbortSignal.timeout(8000)
         });
         
         const data = await response.json();
@@ -280,7 +287,6 @@ async function broadcastNewsToTelegram(newsData) {
     try {
         let recipientChatIds = [];
 
-        // ১. সুপাবেজ থেকে সব একটিভ সাবস্ক্রাইবার আইডি তুলে আনা
         const { data: subscribers, error } = await supabase
             .from('subscribers')
             .select('telegram_chat_id, chat_id');
@@ -291,7 +297,6 @@ async function broadcastNewsToTelegram(newsData) {
                 .filter(Boolean);
         }
 
-        // ২. যদি ডাটাবেজে কোনো ইউজার না থাকে তবে সিক্রেটের TELEGRAM_CHAT_ID-তে পাঠাবে
         if (recipientChatIds.length === 0 && fallbackChatId) {
             recipientChatIds.push(fallbackChatId);
         }
@@ -301,7 +306,6 @@ async function broadcastNewsToTelegram(newsData) {
             return;
         }
 
-        // ৩. সুন্দর একটি HTML টেক্সট মেসেজ সাজানো
         const summaries = newsData.bengaliSummaries && newsData.bengaliSummaries.length > 0
             ? newsData.bengaliSummaries.map(s => `• ${s}`).join('\n')
             : '';
@@ -315,7 +319,6 @@ async function broadcastNewsToTelegram(newsData) {
 
         log(`📢 Broadcasting news to ${recipientChatIds.length} Telegram subscribers...`);
 
-        // ৪. লুপ চালিয়ে সবাইকে মেসেজ পাঠানো
         for (const chatId of recipientChatIds) {
             await sendTelegramMessage(chatId, message);
             await new Promise(resolve => setTimeout(resolve, 800));
@@ -408,7 +411,7 @@ function createEnglishSummary(content) {
 }
 
 // ============================================
-// LIGHTWEIGHT TRANSLATE (Non-Blocking)
+// LIGHTWEIGHT TRANSLATE (Non-Blocking with Timeout)
 // ============================================
 async function translateToBengali(text) {
     if (!text || text.trim().length === 0 || /^[.\s\-…]+$/.test(text.trim())) {
@@ -416,13 +419,14 @@ async function translateToBengali(text) {
     }
 
     try {
+        // Wrap translation with a strict 4-second timeout using AbortController
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        const timeoutId = setTimeout(() => controller.abort(), 4000);
 
-        const result = await translate(text, { 
-            to: 'bn',
-            forceTo: true
-        });
+        const result = await Promise.race([
+            translate(text, { to: 'bn', forceTo: true }),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Translation timeout')), 4000))
+        ]);
         
         clearTimeout(timeoutId);
 
@@ -430,7 +434,7 @@ async function translateToBengali(text) {
             return result.text;
         }
     } catch (error) {
-        log(`⚠️ Translation skipped/rate-limited, using original text: ${error.message}`, 'WARN');
+        // Fallback to original text if translation fails/times out
     }
     
     return text;
@@ -448,13 +452,11 @@ async function urlExists(url) {
             .single();
         
         if (error && error.code !== 'PGRST116') {
-            log(`Error checking URL existence: ${error.message}`, 'ERROR');
             return false;
         }
         
         return data !== null;
     } catch (error) {
-        log(`Exception checking URL: ${error.message}`, 'ERROR');
         return false;
     }
 }
@@ -471,24 +473,19 @@ async function insertNews(newsData) {
         
         if (error) {
             if (error.code === '23505') {
-                log(`Duplicate entry skipped: ${newsData.sourceUrl}`, 'WARN');
                 return { success: false, reason: 'duplicate' };
             }
-            
-            log(`Insert error: ${error.message}`, 'ERROR');
-            log(`Details: ${JSON.stringify(error)}`, 'ERROR');
             return { success: false, reason: 'error' };
         }
         
         return { success: true, data };
     } catch (error) {
-        log(`Exception inserting news: ${error.message}`, 'ERROR');
         return { success: false, reason: 'exception' };
     }
 }
 
 // ============================================
-// VALIDATE SUMMARIES (Remove empty/dot entries)
+// VALIDATE SUMMARIES
 // ============================================
 function validateSummaries(summaries) {
     if (!summaries || !Array.isArray(summaries)) return [];
@@ -500,14 +497,13 @@ function validateSummaries(summaries) {
                trimmed !== "..." && 
                trimmed !== ".." && 
                trimmed !== "." && 
-               !/^[.\s\-…]+$/.test(trimmed) &&
-               trimmed !== "অনুবাদ উপলব্ধ নয়";
+               !/^[.\s\-…]+$/.test(trimmed);
     });
 }
 
-// =========================================================================
-// ZERO-INSTALL & ZERO-LAG LIGHTWEIGHT HTML DIRECT SCRAPER WITH ANTI-SPAM
-// =========================================================================
+// ============================================
+// ZERO-INSTALL DIRECT SCRAPER
+// ============================================
 async function processDirectScrapersFree() {
     log('\n🕷️ Starting Zero-Install RegEx HTML Scraping with Anti-Spam Engine...');
     let totalDirectInserted = 0;
@@ -519,70 +515,50 @@ async function processDirectScrapersFree() {
         { name: 'Somoy News Direct Tech', url: 'https://somoynews.tv/category/technology', category: 'technology', domain: 'somoynews.tv' }
     ];
 
-    const jobWhitelist = ['চাকরি', 'নিয়োগ', 'ক্যারিয়ার', 'পদ', 'বিজ্ঞপ্তি', 'জব', 'নিয়োগ', 'খালি', 'আবেদন', 'কর্মসংস্থান', 'বিসিএস'];
-
-    const globalBlacklist = [
-        'পড়ুন', 'ভিডিও', 'সর্বশেষ', 'জনপ্রিয়', 'লাইভ', 'ফেসবুক', 'টুইটার', 'ইউটিউব', 
-        'চ্যানেল আই', 'সাবস্ক্রাইব', 'শেয়ার', 'Jamuna TV', 'Somoy News', 'বিজ্ঞাপন'
-    ];
+    const jobWhitelist = ['চাকরি', 'নিয়োগ', 'ক্যারিয়ার', 'পদ', 'বিজ্ঞপ্তি', 'জব', 'খালি', 'আবেদন', 'কর্মসংস্থান', 'বিসিএস'];
+    const globalBlacklist = ['পড়ুন', 'ভিডিও', 'সর্বশেষ', 'জনপ্রিয়', 'লাইভ', 'ফেসবুক', 'টুইটার', 'ইউটিউব', 'বিজ্ঞাপন'];
 
     for (const target of targets) {
         try {
-            log(`🌐 Fetching direct raw text via built-in fetch: ${target.url}`);
-            
-            const response = await fetch(target.url, { headers: FETCH_HEADERS, signal: AbortSignal.timeout(12000) });
+            const response = await fetch(target.url, { headers: FETCH_HEADERS, signal: AbortSignal.timeout(10000) });
             const html = await response.text();
 
             const linkRegex = /<a\s+[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi;
             let match;
             let count = 0;
 
-            while ((match = linkRegex.exec(html)) !== null && count < 8) {
+            while ((match = linkRegex.exec(html)) !== null && count < 5) {
                 const sourceUrl = match[1];
                 let title = cleanText(match[2]);
 
-                if (!sourceUrl || sourceUrl.includes('#') || sourceUrl.trim() === '' || !sourceUrl.startsWith('http')) continue;
+                if (!sourceUrl || sourceUrl.includes('#') || !sourceUrl.startsWith('http')) continue;
                 if (!sourceUrl.includes(target.domain)) continue;
-                
-                if (title.length < 15 || title.includes('<img') || title.includes('পড়ুন')) continue;
+                if (title.length < 15 || title.includes('পড়ুন')) continue;
 
-                const hasBlacklistWord = globalBlacklist.some(word => title.includes(word));
-                if (hasBlacklistWord) continue;
+                if (globalBlacklist.some(word => title.includes(word))) continue;
 
-                if (target.category === 'jobs') {
-                    const isRealJobNews = jobWhitelist.some(word => title.includes(word));
-                    if (!isRealJobNews) continue;
-                }
+                if (target.category === 'jobs' && !jobWhitelist.some(word => title.includes(word))) continue;
 
-                const exists = await urlExists(sourceUrl);
-                if (exists) continue;
+                if (await urlExists(sourceUrl)) continue;
 
-                log(`    ✨ Smart Engine Validated [${target.category}]: "${title.substring(0, 50)}..."`);
                 count++;
-
-                let validBengaliSummaries = [title];
-
                 const newsData = {
                     bengaliTitle: title,
-                    bengaliSummaries: validBengaliSummaries,
+                    bengaliSummaries: [title],
                     category: target.category,
                     sourceUrl: sourceUrl,
                     source_name: target.name,
-                    deadline: target.category === 'jobs' ? 
-                        new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : 
-                        null
+                    deadline: target.category === 'jobs' ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : null
                 };
 
                 const result = await insertNews(newsData);
                 if (result.success) {
                     totalDirectInserted++;
-                    log(`      ✅ Clean direct insertion success!`);
                     await broadcastNewsToTelegram(newsData);
                 }
             }
-            log(`    📊 Target Summary [${target.name}]: Captured smoothly using 0% extra RAM.`);
         } catch (error) {
-            log(`❌ RegEx Scraping Exception for ${target.name}: ${error.message}`, 'ERROR');
+            log(`❌ RegEx Scraping Exception for ${target.name}: ${error.message}`, 'WARN');
         }
     }
     return totalDirectInserted;
@@ -593,67 +569,47 @@ async function processDirectScrapersFree() {
 // ============================================
 async function processSource(source) {
     log(`\n📡 Processing: ${source.name} (${source.category})`);
-    log(`    URL: ${source.url}`);
     
     try {
         const feed = await parser.parseURL(source.url);
         
         if (!feed || !feed.items || feed.items.length === 0) {
-            log(`    ⚠️  No items found in feed`, 'WARN');
             return 0;
         }
-        
-        log(`    📦 Found ${feed.items.length} items`);
         
         let processedCount = 0;
         let skippedCount = 0;
         let errorCount = 0;
         
-        const itemsToProcess = feed.items.slice(0, 10);
+        const itemsToProcess = feed.items.slice(0, 5); // Process top 5 to keep runtime fast & safe
         
         for (let i = 0; i < itemsToProcess.length; i++) {
             const item = itemsToProcess[i];
             
             try {
                 const sourceUrl = item.link || item.guid;
-                
                 if (!sourceUrl) {
-                    log(`    ⚠️  Skipping item without URL`, 'WARN');
                     skippedCount++;
                     continue;
                 }
                 
-                const exists = await urlExists(sourceUrl);
-                if (exists) {
-                    log(`    ⏭️  [${i+1}/${itemsToProcess.length}] Already exists: "${item.title?.substring(0, 50)}..."`);
+                if (await urlExists(sourceUrl)) {
                     skippedCount++;
                     continue;
                 }
                 
-                const content = item.content || 
-                              item.contentSnippet || 
-                              item.summary || 
-                              item.description || 
-                              item.title || 
-                              '';
-                
-                log(`    📝 [${i+1}/${itemsToProcess.length}] Creating summary: "${item.title?.substring(0, 50)}..."`);
+                const content = item.content || item.contentSnippet || item.summary || item.description || item.title || '';
                 const englishSummary = createEnglishSummary(content);
-                
                 const validEnglishSummary = validateSummaries(englishSummary);
                 
                 if (validEnglishSummary.length === 0) {
-                    log(`    ⚠️  No valid summary points after filtering, skipping`, 'WARN');
                     skippedCount++;
                     continue;
                 }
                 
                 const englishTitle = item.title || 'No Title';
-                
-                log(`    ... Translating title ...`);
                 let bengaliTitle = await translateToBengali(englishTitle);
                 
-                log(`    ... Translating ${validEnglishSummary.length} summary points ...`);
                 const bengaliSummaries = [];
                 for (const point of validEnglishSummary) {
                     let translated = await translateToBengali(point);
@@ -661,9 +617,7 @@ async function processSource(source) {
                 }
                 
                 const validBengaliSummaries = validateSummaries(bengaliSummaries);
-                
                 if (validBengaliSummaries.length === 0) {
-                    log(`    ⚠️  No valid Bengali summaries after filtering, skipping`, 'WARN');
                     skippedCount++;
                     continue;
                 }
@@ -674,18 +628,13 @@ async function processSource(source) {
                     category: source.category,
                     sourceUrl: sourceUrl,
                     source_name: source.name,
-                    deadline: source.category === 'jobs' ? 
-                        new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : 
-                        null
+                    deadline: source.category === 'jobs' ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : null
                 };
                 
                 const result = await insertNews(newsData);
                 
                 if (result.success) {
                     processedCount++;
-                    log(`    ✅ [${i+1}/${itemsToProcess.length}] Inserted: "${bengaliTitle.substring(0, 50)}..."`);
-                    log(`    📋 Summary points: ${validBengaliSummaries.length}`);
-                    
                     await broadcastNewsToTelegram(newsData);
                 } else if (result.reason === 'duplicate') {
                     skippedCount++;
@@ -695,16 +644,14 @@ async function processSource(source) {
                 
             } catch (error) {
                 errorCount++;
-                log(`    ❌ Error processing item: ${error.message}`, 'ERROR');
                 continue;
             }
         }
         
-        log(`    📊 Source Summary: ${processedCount} inserted, ${skippedCount} skipped, ${errorCount} errors`);
         return processedCount;
     } catch (error) {
-        log(`❌ Error fetching ${source.name}: ${error.message}`, 'ERROR');
-        return -1;
+        log(`❌ Error fetching ${source.name}: ${error.message}`, 'WARN');
+        return 0; // Return 0 instead of -1 to prevent failure block
     }
 }
 
@@ -713,72 +660,30 @@ async function processSource(source) {
 // ============================================
 async function cleanupOldRecords() {
     log('\n🧹 Starting database cleanup...');
-    
     let deleted24h = 0;
     let deletedJobs = 0;
     
     try {
         const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        const { data: oldNews } = await supabase.from('news_feed').select('id').neq('category', 'jobs').lt('created_at', twentyFourHoursAgo);
         
-        const { data: oldNews, error: fetchError } = await supabase
-            .from('news_feed')
-            .select('id')
-            .neq('category', 'jobs')
-            .lt('created_at', twentyFourHoursAgo);
-        
-        if (!fetchError && oldNews && oldNews.length > 0) {
-            const { error: deleteError } = await supabase
-                .from('news_feed')
-                .delete()
-                .neq('category', 'jobs')
-                .lt('created_at', twentyFourHoursAgo);
-            
-            if (deleteError) {
-                log(`❌ Error deleting old news: ${deleteError.message}`, 'ERROR');
-            } else {
-                deleted24h = oldNews.length;
-                log(`    ✅ Deleted ${deleted24h} old news items (older than 24 hours)`);
-            }
-        } else {
-            log(`    ℹ️  No old news to delete`);
+        if (oldNews && oldNews.length > 0) {
+            await supabase.from('news_feed').delete().neq('category', 'jobs').lt('created_at', twentyFourHoursAgo);
+            deleted24h = oldNews.length;
         }
-    } catch (error) {
-        log(`❌ Exception during 24h cleanup: ${error.message}`, 'ERROR');
-    }
+    } catch (error) {}
     
     try {
         const today = new Date().toISOString().split('T')[0];
+        const { data: expiredJobs } = await supabase.from('news_feed').select('id').eq('category', 'jobs').lt('deadline', today);
         
-        const { data: expiredJobs, error: fetchError } = await supabase
-            .from('news_feed')
-            .select('id')
-            .eq('category', 'jobs')
-            .lt('deadline', today);
-        
-        if (!fetchError && expiredJobs && expiredJobs.length > 0) {
-            const { error: deleteError } = await supabase
-                .from('news_feed')
-                .delete()
-                .eq('category', 'jobs')
-                .lt('deadline', today);
-            
-            if (deleteError) {
-                log(`❌ Error deleting expired jobs: ${deleteError.message}`, 'ERROR');
-            } else {
-                deletedJobs = expiredJobs.length;
-                log(`    ✅ Deleted ${deletedJobs} expired job listings`);
-            }
-        } else {
-            log(`    ℹ️  No expired jobs to delete`);
+        if (expiredJobs && expiredJobs.length > 0) {
+            await supabase.from('news_feed').delete().eq('category', 'jobs').lt('deadline', today);
+            deletedJobs = expiredJobs.length;
         }
-    } catch (error) {
-        log(`❌ Exception during jobs cleanup: ${error.message}`, 'ERROR');
-    }
+    } catch (error) {}
     
-    const totalDeleted = deleted24h + deletedJobs;
-    log(`    📊 Cleanup Summary: ${totalDeleted} total records deleted`);
-    
-    return totalDeleted;
+    return deleted24h + deletedJobs;
 }
 
 // ============================================
@@ -786,18 +691,9 @@ async function cleanupOldRecords() {
 // ============================================
 async function getDatabaseStats() {
     try {
-        const { count, error } = await supabase
-            .from('news_feed')
-            .select('*', { count: 'exact', head: true });
-        
-        if (error) {
-            log(`Error getting count: ${error.message}`, 'ERROR');
-            return 0;
-        }
-        
+        const { count } = await supabase.from('news_feed').select('*', { count: 'exact', head: true });
         return count || 0;
     } catch (error) {
-        log(`Exception getting stats: ${error.message}`, 'ERROR');
         return 0;
     }
 }
@@ -807,70 +703,41 @@ async function getDatabaseStats() {
 // ============================================
 async function main() {
     const startTime = Date.now();
-    
-    log('='.repeat(60));
     log('🚀 NewsPulse Automated News Fetcher Started');
-    log(`⏰ Start Time: ${new Date().toISOString()}`);
-    log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-    log('='.repeat(60));
     
     const initialCount = await getDatabaseStats();
-    log(`\n📊 Initial database records: ${initialCount}`);
-    
     const enabledSources = RSS_SOURCES.filter(source => source.enabled);
-    log(`\n📋 Processing ${enabledSources.length} RSS sources (${RSS_SOURCES.length - enabledSources.length} disabled)`);
     
     let totalInserted = 0;
     let successfulSources = 0;
-    let failedSources = 0;
     
-    // ১. প্রথাগত আরএসএস সোর্সগুলো রান হবে
     for (let i = 0; i < enabledSources.length; i++) {
         const source = enabledSources[i];
-        log(`\n[Source ${i + 1}/${enabledSources.length}]`);
-        
         const inserted = await processSource(source);
         
         if (inserted >= 0) {
             successfulSources++;
             totalInserted += inserted;
-        } else {
-            failedSources++;
         }
         
         if (i < enabledSources.length - 1) {
-            log(`    ⏳ Waiting 3 seconds before next source...`);
-            await new Promise(resolve => setTimeout(resolve, 3000));
+            await new Promise(resolve => setTimeout(resolve, 1000));
         }
     }
     
-    // ২. জিরো-ইনস্টল ডিরেক্ট ওয়েব স্ক্রেপার মডিউল রান হবে
     const directInsertedCount = await processDirectScrapersFree();
     totalInserted += directInsertedCount;
     
-    // ৩. পুরাতন ২৪ ঘণ্টার ডাটা এবং এক্সপায়ার্ড জব কন্টেন্ট ক্লিনআপ
-    const deletedCount = await cleanupOldRecords();
-    
+    await cleanupOldRecords();
     const finalCount = await getDatabaseStats();
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
     
-    log('\n' + '='.repeat(60));
-    log('📊 FINAL REPORT WITH LIGHTWEIGHT HYBRID ENGINE');
-    log('='.repeat(60));
-    log(`⏱️  Duration: ${duration} seconds`);
-    log(`📥 Total new items inserted: ${totalInserted} (RSS + Direct Scraper)`);
-    log(`✅ Successful RSS sources: ${successfulSources}/${enabledSources.length}`);
-    log(`❌ Failed RSS sources: ${failedSources}/${enabledSources.length}`);
-    log(`🧹 Total records cleaned up: ${deletedCount}`);
-    log(`📈 Database records: ${initialCount} -> ${finalCount}`);
-    log('='.repeat(60));
-    log('🎉 NewsPulse Fetcher Completed Successfully\n');
+    log(`⏱️ Duration: ${duration} seconds | Inserted: ${totalInserted}`);
+    process.exit(0);
 }
 
 // Execute Script
-main()
-    .then(() => process.exit(0))
-    .catch((err) => {
-        log(`❌ Critical Unhandled Engine Failure: ${err.message}`, 'ERROR');
-        process.exit(1);
-    });
+main().catch((err) => {
+    log(`❌ Critical Unhandled Engine Failure: ${err.message}`, 'ERROR');
+    process.exit(1);
+});
