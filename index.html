@@ -704,6 +704,21 @@
       line-height: 1.6;
     }
 
+    /* Source badge under the title */
+    .card-source-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-family: "Inter", sans-serif;
+      font-size: 11px;
+      color: var(--text-muted);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      padding: 2px 10px;
+      border-radius: var(--radius-pill);
+      width: fit-content;
+    }
+
     /* Bullet summary */
     .bullet-list {
       list-style: none;
@@ -718,6 +733,11 @@
       font-size: 13px;
       color: var(--text-secondary);
       line-height: 1.7;
+    }
+
+    .bullet-item.bullet-empty {
+      color: var(--text-faint);
+      font-style: italic;
     }
 
     .bullet-arrow {
@@ -736,6 +756,8 @@
       padding-top: 12px;
       border-top: 1px solid var(--border);
       margin-top: auto;
+      gap: 10px;
+      flex-wrap: wrap;
     }
 
     .source-label {
@@ -1294,8 +1316,8 @@
       }
     }
 
-    // 🌟 UPDATED: handleLike with TOGGLE logic
-    // আগে already liked থাকলে আবার click করলে unlike হয়ে যাবে
+    // 🌟 handleLike with TOGGLE logic
+    // আগে already liked থাকলে আবার click করলে unlike হয়ে যাবে
     async function handleLike(articleId, cardElement) {
       // Check current state
       const currentReaction = getReaction(articleId);
@@ -1317,11 +1339,6 @@
           const likeBtn = cardElement.querySelector('.like-btn');
           if (likeBtn) likeBtn.classList.remove('liked');
         }
-        
-        // 🌟 Optionally delete from Supabase (if you want to track unlikes too)
-        // For now, we just don't add a new like
-        // You could also add a delete query:
-        // await db.from('article_likes').delete().eq('article_id', articleId).limit(1);
         
         // Update global count optimistically
         if (globalLikeCounts[articleId] && globalLikeCounts[articleId] > 0) {
@@ -1376,8 +1393,8 @@
       }
     }
 
-    // 🌟 UPDATED: handleDislike with TOGGLE logic
-    // আগে already disliked থাকলে আবার click করলে undislike হয়ে যাবে
+    // 🌟 handleDislike with TOGGLE logic
+    // আগে already disliked থাকলে আবার click করলে undislike হয়ে যাবে
     async function handleDislike(articleId, cardElement) {
       // Check current state
       const currentReaction = getReaction(articleId);
@@ -1678,12 +1695,12 @@
           ]);
 
         if (error) {
-          console.error("[Supabase Error] ডাটাবেজে সেভ হয়নি:", error.message);
+          console.error("[Supabase Error] ডাটাবেজে সেভ হয়নি:", error.message);
         } else {
           console.log("[Supabase Success] ডাটা সফলভাবে ডাটাবেজে গেছে:", data);
         }
       } catch (err) {
-        console.error("[Catch Error] নেটওয়ার্ক বা অন্য সমস্যা:", err);
+        console.error("[Catch Error] নেটওয়ার্ক বা অন্য সমস্যা:", err);
       } finally {
         doneBtn.disabled = false;
         doneBtn.innerHTML = originalText;
@@ -1887,6 +1904,9 @@
       `;
     }
 
+    // 🌟 UPDATED: builds the bengali/english title + summary bullets,
+    // and falls back gracefully if bengaliSummaries / englishSummaries is empty
+    // (matches the "no summary found" fallback requested for the news card)
     function renderCard(article, index) {
       let title, summaries;
       
@@ -1897,19 +1917,27 @@
         title = article.bengaliTitle || article.englishTitle || "কোনো শিরোনাম নেই";
         summaries = article.bengaliSummaries || article.englishSummaries || [];
       }
-      
-      const bullets = (summaries || []).map((b) => `
-        <li class="bullet-item"><span class="bullet-arrow">▸</span><span>${escapeHtml(b)}</span></li>
-      `).join("");
+
+      const noSummaryText = currentLang === "bn"
+        ? "কোনো সারসংক্ষেপ পাওয়া যায়নি।"
+        : "No summary available.";
+
+      const bullets = (summaries && summaries.length > 0)
+        ? summaries.map((b) => `
+            <li class="bullet-item"><span class="bullet-arrow">▸</span><span>${escapeHtml(b)}</span></li>
+          `).join("")
+        : `<li class="bullet-item bullet-empty"><span class="bullet-arrow">▸</span><span>${noSummaryText}</span></li>`;
 
       const sourceText = currentLang === "bn" ? "সূত্র" : "Source";
       const readText = currentLang === "bn" ? "পড়ুন →" : "Read →";
       const deadlineText = currentLang === "bn" ? "শেষ" : "Deadline";
       const unknownText = currentLang === "bn" ? "অজানা" : "Unknown";
+      const sourceName = article.source_name || unknownText;
 
+      // 🌟 জব ক্যাটাগরির জন্য ডেডলাইন ব্যাজ, অন্যথায় সোর্স নেম দেখানো হয়
       const deadlineHtml = (article.category === "jobs" && article.deadline)
         ? `<span class="deadline-label">${deadlineText}: ${formatDeadline(article.deadline)}</span>`
-        : `<span class="source-label">${sourceText}: <span class="source-name">${escapeHtml(article.source_name || unknownText)}</span></span>`;
+        : `<span class="source-label">${sourceText}: <span class="source-name">${escapeHtml(sourceName)}</span></span>`;
 
       const articleId = article.id || `article-${article.created_at}-${index}`;
 
@@ -1920,6 +1948,7 @@
             <time class="time-ago">${timeAgo(article.created_at)}</time>
           </div>
           <h2 class="card-title">${escapeHtml(title)}</h2>
+          <span class="card-source-badge">🔖 ${escapeHtml(sourceName)}</span>
           <ul class="bullet-list">${bullets}</ul>
           ${renderReactionButtons(articleId)}
           <div class="card-footer">
