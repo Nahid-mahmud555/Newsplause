@@ -323,44 +323,37 @@ function createEnglishSummary(content) {
 }
 
 // ============================================
-// TRANSLATE TO BENGALI
+// TRANSLATE TO BENGALI WITH UNLIMITED RETRIES
 // ============================================
 async function translateToBengali(text) {
     if (!text || text.trim().length === 0 || /^[.\s\-…]+$/.test(text.trim())) {
         return text;
     }
-    
-    let retries = 3;
-    
-    while (retries > 0) {
+
+    let attempt = 0;
+    while (true) {
+        attempt++;
         try {
             const result = await translate(text, { 
                 to: 'bn',
                 forceTo: true
             });
             
-            if (result && result.text && result.text.trim().length > 0) {
+            if (result && result.text && result.text.trim().length > 0 && result.text !== 'অনুবাদ উপলব্ধ নয়') {
                 return result.text;
             }
             
-            let error = new Error('Empty translation result');
-            throw error;
+            throw new Error('Empty or invalid translation returned from API');
             
         } catch (error) {
-            retries--;
+            log(`⚠️ Translation API Error/Limit Exceeded (Attempt ${attempt}): ${error.message}`, 'WARN');
+            log(`⏸️ Rate Limit Hit! Resting for 5 minutes (300 seconds) before retrying this item...`, 'WARN');
             
-            if (retries === 0) {
-                log(`Translation failed after all retries: ${error.message}`, 'ERROR');
-                return text;
-            }
-            
-            const waitTime = (4 - retries) * 2000;
-            log(`Translation retry in ${waitTime/1000}s (${retries} retries left)`, 'WARN');
-            await new Promise(resolve => setTimeout(resolve, waitTime));
+            // ৫ মিনিট ওয়েট (৩০০,০০০ মি.সে.)
+            await new Promise(resolve => setTimeout(resolve, 5 * 60 * 1000));
+            log(`🔄 Resuming translation attempt ${attempt + 1}...`, 'INFO');
         }
     }
-    
-    return text;
 }
 
 // ============================================
@@ -447,13 +440,13 @@ async function processDirectScrapersFree() {
         { name: 'Somoy News Direct Tech', url: 'https://somoynews.tv/category/technology', category: 'technology', domain: 'somoynews.tv' }
     ];
 
-    // জব সেকশনের বাধ্যতামূলক কি-ওয়ার্ড ফিল্টার (হোয়াইটলিস্ট)
-    const jobWhitelist = ['চাকরি', 'নিয়োগ', 'ক্যারিয়ার', 'পদ', 'বিজ্ঞপ্তি', 'জব', 'নিয়োগ', 'খালি', 'আবেদন', 'কর্মসংস্থান', 'বিসিএস'];
+    // জব সেকশনের বাধ্যতামূলক কি-ওয়ার্ড ফিল্টার (হোয়াইটলিস্ট)
+    const jobWhitelist = ['চাকরি', 'নিয়োগ', 'ক্যারিয়ার', 'পদ', 'বিজ্ঞপ্তি', 'জব', 'নিয়োগ', 'খালি', 'আবেদন', 'কর্মসংস্থান', 'বিসিএস'];
 
-    // আজেবাজে সাইডবার, মেনু বা সোশ্যাল মিডিয়া বাটন ফিল্টার (ব্ল্যাকলিস্ট)
+    // আজেবাজে সাইডবার, মেনু বা সোশ্যাল মিডিয়া বাটন ফিল্টার (ব্ল্যাকলিস্ট)
     const globalBlacklist = [
-        'পড়ুন', 'ভিডিও', 'সর্বশেষ', 'জনপ্রিয়', 'লাইভ', 'ফেসবুক', 'টুইটার', 'ইউটিউব', 
-        'চ্যানেল আই', 'সাবস্ক্রাইব', 'শেয়ার', 'Jamuna TV', 'Somoy News', 'বিজ্ঞাপন'
+        'পড়ুন', 'ভিডিও', 'সর্বশেষ', 'জনপ্রিয়', 'লাইভ', 'ফেসবুক', 'টুইটার', 'ইউটিউব', 
+        'চ্যানেল আই', 'সাবস্ক্রাইব', 'শেয়ার', 'Jamuna TV', 'Somoy News', 'বিজ্ঞাপন'
     ];
 
     for (const target of targets) {
@@ -463,7 +456,7 @@ async function processDirectScrapersFree() {
             const response = await fetch(target.url, { headers: FETCH_HEADERS, signal: AbortSignal.timeout(12000) });
             const html = await response.text();
 
-            // RegEx দিয়ে নিখুঁত এঙ্কর ট্যাগ ও টাইটেল ফিল্টারিং
+            // RegEx দিয়ে নিখুঁত এঙ্কর ট্যাগ ও টাইটেল ফিল্টারিং
             const linkRegex = /<a\s+[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi;
             let match;
             let count = 0;
@@ -477,13 +470,13 @@ async function processDirectScrapersFree() {
                 if (!sourceUrl.includes(target.domain)) continue;
                 
                 // ২. লেংথ এবং ইমপ্রোপার ট্যাগ ফিল্টার
-                if (title.length < 15 || title.includes('<img') || title.includes('পড়ুন')) continue;
+                if (title.length < 15 || title.includes('<img') || title.includes('পড়ুন')) continue;
 
                 // ৩. গ্লোবাল অ্যান্টি-স্প্যাম ব্ল্যাকলিস্ট ফিল্টার
                 const hasBlacklistWord = globalBlacklist.some(word => title.includes(word));
                 if (hasBlacklistWord) continue;
 
-                // ৪. জব সেকশনের জন্য স্ট্রাকচার্ড হোয়াইটলিস্ট চেক
+                // ৪. জব সেকশনের জন্য স্ট্রাকচার্ড হোয়াইটলিস্ট চেক
                 if (target.category === 'jobs') {
                     const isRealJobNews = jobWhitelist.some(word => title.includes(word));
                     if (!isRealJobNews) continue; // চাকরির বাইরে সাইডবারের কোনো নিউজ জবে ঢুকবে না
@@ -584,22 +577,24 @@ async function processSource(source) {
                 }
                 
                 const englishTitle = item.title || 'No Title';
+
+                // ==========================================================
+                // ⏳ TRANSLATION SAFETY DELAY (1 to 2 mins wait before translating each news)
+                // ==========================================================
+                const preWaitTime = Math.floor(Math.random() * (120000 - 60000 + 1)) + 60000;
+                log(`   ⏳ Pausing ${(preWaitTime / 1000).toFixed(0)} seconds before starting Bengali translation for API rate-limit safety...`);
+                await new Promise(resolve => setTimeout(resolve, preWaitTime));
                 
                 log(`   ... Translating title ...`);
                 let bengaliTitle = await translateToBengali(englishTitle);
-                if (bengaliTitle === 'অনুবাদ উপলব্ধ নয়' || !bengaliTitle || bengaliTitle.trim().length === 0) {
-                    bengaliTitle = englishTitle;
-                }
                 
                 log(`   ... Translating ${validEnglishSummary.length} summary points ...`);
                 const bengaliSummaries = [];
                 for (const point of validEnglishSummary) {
                     let translated = await translateToBengali(point);
-                    if (translated === 'অনুবাদ উপলব্ধ নয়' || !translated || translated.trim().length === 0) {
-                        translated = point;
-                    }
                     bengaliSummaries.push(translated);
-                    await new Promise(resolve => setTimeout(resolve, 500));
+                    // Point-to-point micro delay
+                    await new Promise(resolve => setTimeout(resolve, 2000));
                 }
                 
                 const validBengaliSummaries = validateSummaries(bengaliSummaries);
