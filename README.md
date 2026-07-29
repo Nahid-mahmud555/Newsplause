@@ -127,13 +127,11 @@ Then click **Start** or send:
 
 ### 📸 Proof of Work (Telegram Automation Live Demo)
 
-Here is the proof of work showing the automated real-time news updates being successfully delivered to Telegram over the initial days:
+<img src="./telegram%20pic/Day_01.png" alt="Proof Day 1" width="600"/>
 
-<img src="./telegram-pic/Day_01.png" alt="Automation Proof Day 1" width="600"/>
+<img src="./telegram%20pic/Day_02.png" alt="Proof Day 2" width="600"/>
 
-<img src="./telegram-pic/Day_02.png" alt="Automation Proof Day 2" width="600"/>
-
-<img src="./telegram-pic/Day_03.png" alt="Automation Proof Day 3" width="600"/>
+<img src="./telegram%20pic/Day_03.png" alt="Proof Day 3" width="600"/>
 
 
 ### **3. Important**
