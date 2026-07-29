@@ -124,6 +124,22 @@ Then click **Start** or send:
 
 ---
 
+
+### 📸 Proof of Work (Telegram Automation Live Demo)
+
+Here is the proof of work showing the automated real-time news updates being successfully delivered to Telegram over 3 consecutive days:
+
+* **Day 01:** Successfully tested and verified the automated news scraping and broadcasting pipeline.
+  ![Day 01 Proof](./Day_01.png)
+
+* **Day 02:** Continuous background execution delivering filtered and clean news updates seamlessly.
+  ![Day 02 Proof](./Day_02.png)
+
+* **Day 03:** Stable automated performance running smoothly without any manual intervention.
+  ![Day 03 Proof](./Day_03.png)
+
+
+
 ### **3. Important**
 
 Once you've started the bot, you never need to open the website again.
