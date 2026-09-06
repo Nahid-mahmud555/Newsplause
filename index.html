@@ -1737,6 +1737,7 @@
     const STORAGE_KEY_REACTIONS = "newspulse_reactions";
     const STORAGE_KEY_LIKED_IDS = "news_liked_ids";
     const STORAGE_KEY_THEME    = "newspulse_theme"; // 🌟 NEW
+    const STORAGE_KEY_LIKE_ROW_IDS = "newspulse_like_row_ids"; // FIX: remembers which exact DB row is "mine" per article
     
     const VALID_CATEGORIES = ["all", "technology", "national", "sports", "jobs", "crime", "liked"];
 
@@ -1761,6 +1762,7 @@
     let allArticles = [];
     let globalLikeCounts = {};
     let currentTheme = "dark"; // 🌟 NEW
+    let likeRowIds = {}; // FIX: { articleId: dbRowId } — which exact row THIS browser inserted
 
     // 🌟 THEME MANAGEMENT
     function loadTheme() {
@@ -1819,6 +1821,13 @@
       } catch(e) {
         likedIds = [];
       }
+
+      try {
+        const rawRowIds = localStorage.getItem(STORAGE_KEY_LIKE_ROW_IDS);
+        likeRowIds = rawRowIds ? JSON.parse(rawRowIds) : {};
+      } catch(e) {
+        likeRowIds = {};
+      }
       
       console.log("[Reactions] Loaded:", Object.keys(reactionsMap).length, "reactions,", likedIds.length, "liked IDs");
     }
@@ -1829,6 +1838,14 @@
         localStorage.setItem(STORAGE_KEY_LIKED_IDS, JSON.stringify(likedIds));
       } catch(e) {
         console.warn("[Reactions] Could not save:", e.message);
+      }
+    }
+
+    function saveLikeRowIds() {
+      try {
+        localStorage.setItem(STORAGE_KEY_LIKE_ROW_IDS, JSON.stringify(likeRowIds));
+      } catch(e) {
+        console.warn("[Reactions] Could not save like row ids:", e.message);
       }
     }
 
@@ -1853,6 +1870,28 @@
           globalLikeCounts[articleId]--;
         }
         
+        // FIX: delete THIS exact row (by its own id) from the DB instead of
+        // only decrementing a local counter — this is what actually makes
+        // the count go back down and stay down.
+        const rowId = likeRowIds[articleId];
+        try {
+          const delQuery = db.from('article_likes').delete();
+          const { error } = rowId
+            ? await delQuery.eq('id', rowId)
+            : await delQuery.eq('article_id', articleId); // fallback for likes saved before this fix
+
+          if (error) {
+            console.error('[Supabase] Error removing like:', error.message);
+          } else {
+            console.log('[Supabase] ✅ Like removed from DB for:', articleId);
+          }
+        } catch (err) {
+          console.error('[Supabase] Exception on unlike:', err);
+        }
+
+        delete likeRowIds[articleId];
+        saveLikeRowIds();
+        
         return;
       }
       
@@ -1876,14 +1915,21 @@
       }
 
       try {
-        const { error } = await db
+        // FIX: capture the id Supabase assigns to this row so that unliking
+        // can delete exactly this row later (no duplicates, no leftovers).
+        const { data, error } = await db
           .from('article_likes')
-          .insert([{ article_id: articleId }]);
+          .insert([{ article_id: articleId }])
+          .select('id');
           
         if (error) {
           console.error('[Supabase] Error saving global like:', error.message);
         } else {
           console.log('[Supabase] ✅ Global like saved for:', articleId);
+          if (data && data[0] && data[0].id) {
+            likeRowIds[articleId] = data[0].id;
+            saveLikeRowIds();
+          }
           if (globalLikeCounts[articleId]) {
             globalLikeCounts[articleId]++;
           } else {
