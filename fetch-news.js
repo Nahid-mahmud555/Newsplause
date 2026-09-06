@@ -292,6 +292,51 @@ function cleanText(text) {
         .replace(/\s+/g, ' ').trim();
 }
 
+// ──────────────────────────────────────────────────────────
+// FIX: Proper source URL resolver
+// Ensures the link saved actually points to the real article page,
+// instead of falling back to a non-URL guid or leaving a broken/relative link.
+// ──────────────────────────────────────────────────────────
+function decodeUrlEntities(url) {
+    if (!url) return '';
+    return url.replace(/&amp;/g, '&').trim();
+}
+
+function isValidHttpUrl(url) {
+    if (!url) return false;
+    try {
+        const u = new URL(url);
+        return u.protocol === 'http:' || u.protocol === 'https:';
+    } catch {
+        return false;
+    }
+}
+
+function getValidSourceUrl(item, feedUrl) {
+    // 1) Prefer item.link — the real article URL in almost all RSS feeds
+    let candidate = decodeUrlEntities(item.link);
+    if (isValidHttpUrl(candidate)) return candidate;
+
+    // 2) Some feeds put the link as a relative path in item.link — resolve it
+    if (candidate && feedUrl) {
+        try {
+            const resolved = new URL(candidate, feedUrl).href;
+            if (isValidHttpUrl(resolved)) return resolved;
+        } catch {}
+    }
+
+    // 3) Fall back to guid ONLY if it's actually a URL (not an internal ID)
+    //    and isn't explicitly marked as non-permalink.
+    if (item.guid && item.isPermaLink !== false) {
+        const guidCandidate = decodeUrlEntities(item.guid);
+        if (isValidHttpUrl(guidCandidate)) return guidCandidate;
+    }
+
+    // 4) Nothing usable — return null so the item gets skipped instead of
+    //    saving a dead/wrong link.
+    return null;
+}
+
 function createEnglishSummary(content) {
     if (!content) return ['No content'];
     const clean = cleanText(content);
@@ -358,7 +403,9 @@ async function processSource(source) {
         
         for (const item of items) {
             try {
-                const sourceUrl = item.link || item.guid;
+                // FIX: validate the source URL properly instead of blindly
+                // falling back to guid (which is often not a real URL)
+                const sourceUrl = getValidSourceUrl(item, source.url);
                 if (!sourceUrl || await urlExists(sourceUrl)) { skipped++; continue; }
                 
                 const content = item.content || item.contentSnippet || item.summary || item.description || '';
@@ -423,15 +470,26 @@ async function processDirectScrapers() {
             const res = await fetch(target.url, { headers: FETCH_HEADERS, signal: AbortSignal.timeout(8000) });
             const html = await res.text();
             
-            const linkRegex = /<a\s+[^>]*href=["'](https?:\/\/[^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi;
+            // FIX: also capture relative hrefs (e.g. "/news/12345") and
+            // resolve them against the target site's URL, so the saved
+            // link always points to a real, clickable page.
+            const linkRegex = /<a\s+[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi;
             let match;
             let count = 0;
             
             while ((match = linkRegex.exec(html)) !== null && count < 3) {
-                const url = match[1];
+                let rawUrl = decodeUrlEntities(match[1]);
                 let title = cleanText(match[2]);
                 
-                if (!url || !title || title.length < 20) continue;
+                if (!rawUrl || !title || title.length < 20) continue;
+                if (rawUrl.startsWith('javascript:') || rawUrl.startsWith('#')) continue;
+                
+                let url;
+                try {
+                    url = new URL(rawUrl, target.url).href;
+                } catch { continue; }
+                
+                if (!isValidHttpUrl(url)) continue;
                 if (await urlExists(url)) continue;
                 
                 const newsData = {
