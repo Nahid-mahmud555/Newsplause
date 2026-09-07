@@ -2,7 +2,7 @@
 
 *Automated Real-Time News Intelligence Engine* 
 
-> *"In a world overflowing with endless digital noise and feeds, your time is your most expensive currency. NewsPulse wasn’t build in a corporate boardroom to chase revenue—it was born from a simple desire to give people their precious time back."*
+> *"In a world overflowing with endless digital noise and feeds, your time is your most expensive currency. NewsPulse wasn’t build in a corporate boardroom to chase revenue—it was born from a simple desire to give people their precious time back."*fgfgf
 
 🌐 **Live Web Application:** https://newsplause.vercel.app/
 
